@@ -1,8 +1,3 @@
---algoritmo de machine learnig
---Utilização de redes neurais e programação genetica
---objetivos:
---1 - pegar stats necessarios para gerar um "huk" para implementação do algoritmo.
-
 local u8 = memory.readbyte;
 local s8 =  memory.readbytesigned
 local s16 = memory.readwordsigned;
@@ -16,22 +11,23 @@ local player = {
 };
 
 local diePlaces = {};
-local lastDie = 0;
-local jumpCount = 1;
+local lastPos;
 
 --functions
 local function action()
 	joypad.set(1, {Y=1});
 	joypad.set(1, {right=1});
 
-	if u8(player.onAir) == 0 and diePlaces[jumpCount] ~= nil and s16(player.x) > diePlaces[jumpCount]-50 and s16(player.x) < diePlaces[jumpCount] then
-		joypad.set(1, {B=1});
-		jumpCount = jumpCount + 1;
+	local count = s16(player.x);
+	while count < s16(player.x)+50 do
+		if u8(player.onAir) == 0 and diePlaces[count] == true then
+			joypad.set(1, {B=1});
+			break;
+		end
+		count = count + 1;
 	end
 
-	if s8(player.speed) < 10 and s16(player.x) > 50 then
-		lastDie = s16(player.x);
-	end
+	lastPos = (math.floor(s16(player.x)/10)*10);
 end
 
 local function console()
@@ -39,20 +35,17 @@ local function console()
 	gui.text(10, 200, "Y: " .. s16(player.y));
 	gui.text(10, 210, "Speed: " .. s8(player.speed));
 
-	gui.text(50, 200, "lastDie: " .. lastDie);
-	gui.text(50, 210, "Moving: " .. tostring(u8(player.animationTrigger) == 0));
-
-	gui.text(110, 200, "Jump: " .. jumpCount-1);
-	gui.text(110, 210, "NJump: " .. table.getn(diePlaces));
+	local count = 40;
+	for i,v in pairs(diePlaces) do
+	    gui.text(200, count, "Die: " .. tostring(i));
+	    count = count + 10;
+	end
 end
 
 --start
 local function start()
-	if lastDie ~= 0 then
-		table.insert(diePlaces, lastDie);
-	end
-
-	jumpCount = 1;
+	joypad.set(1, {B=0});
+	diePlaces[lastPos] = true;
 end
 savestate.registerload(start);
 
