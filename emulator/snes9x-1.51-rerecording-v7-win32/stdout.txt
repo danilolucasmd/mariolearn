@@ -4,4 +4,3 @@ Using ROM Super Mario World (USA).sfc in C:\Users\Danilo\Documents\TCC\tcc-uniso
 No ROM file header found.
 Map_LoROMMap
 "SUPER MARIOWORLD" [checksum ok] LoROM, 4Mbits, Type: ROM+RAM+BAT, Mode: 20, TV: NTSC, S-RAM: 2KB, ROMId: ____ Company: 01 CRC32: B19ED489
-Saving	config file	C:\Users\Danilo\Documents\TCC\tcc-uniso\emulator\snes9x-1.51-rerecording-v7-win32/snes9x.cfg

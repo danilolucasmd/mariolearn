@@ -67,5 +67,3 @@ DDraw/D3D Triple Buffering
 D3D Nearest
 D3D Bilinear
 F&ilter
-Invalid Zip archive.
-ROM image "C:\Users\Danilo\Documents\TCC\Super Mario World (USA).zip" was not found or could not be opened.
