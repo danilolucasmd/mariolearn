@@ -10,10 +10,35 @@ local player = {
 	onAir = 0x0072,
 };
 
+local actions = [
+	["A"],
+	["B"],
+	["X"],
+	["Y"],
+	["right"],
+	["left"],
+	["up"],
+	["down"]
+];
 local diePlaces = {};
 local lastPos;
+local pause = false;
 
 --functions
+local function backtrack(action)
+	joypad.set(1, action);
+
+	while pause do end
+	pause = true;
+	
+	for i,v in actions do
+		action[v] = true;
+		backtrack(action);
+		action[v] = false;
+	end
+end
+--backtrack({});
+
 local function action()
 	joypad.set(1, {Y=1});
 	joypad.set(1, {right=1});
