@@ -10,49 +10,25 @@ local player = {
 	onAir = 0x0072,
 };
 
-local actions = [
-	["A"],
-	["B"],
-	["X"],
-	["Y"],
-	["right"],
-	["left"],
-	["up"],
-	["down"]
-];
+local actions = {"Y", "B", "right", "left"};
+local variations = {};
 local diePlaces = {};
 local lastPos;
-local pause = false;
+local varCount = 1;
 
 --functions
-local function backtrack(action)
-	joypad.set(1, action);
-
-	while pause do end
-	pause = true;
-	
-	for i,v in actions do
-		action[v] = true;
-		backtrack(action);
-		action[v] = false;
-	end
+--TODO: change it to a recursive function
+for i=1, 16, 1 do
+    variations[i] = {
+    	Y = (math.floor(i/8%2) == 1), 
+    	B = (math.floor(i/4%2) == 1),
+    	right = (math.floor(i/2%2) == 1),
+    	left = (math.floor(i%2) == 1)
+    }
 end
---backtrack({});
 
 local function action()
-	joypad.set(1, {Y=1});
-	joypad.set(1, {right=1});
-
-	local count = s16(player.x);
-	while count < s16(player.x)+50 do
-		if u8(player.onAir) == 0 and diePlaces[count] == true then
-			joypad.set(1, {B=1});
-			break;
-		end
-		count = count + 1;
-	end
-
-	lastPos = (math.floor(s16(player.x)/10)*10);
+	joypad.set(variations[varCount])
 end
 
 local function console()
@@ -67,12 +43,13 @@ local function console()
 	end
 end
 
---start
-local function start()
-	joypad.set(1, {B=0});
-	diePlaces[lastPos] = true;
+local function load()
+	varCount = varCount + 1;
+	print(variations[varCount]);
 end
-savestate.registerload(start);
+savestate.registerload(load);
+
+--start
 
 --update
 while true do
