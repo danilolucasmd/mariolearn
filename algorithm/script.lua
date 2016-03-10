@@ -15,6 +15,7 @@ local variations = {};
 local diePlaces = {};
 local lastPos;
 local varCount = 1;
+local pause = true;
 
 --functions
 --TODO: change it to a recursive function
@@ -28,7 +29,7 @@ for i=1, 16, 1 do
 end
 
 local function action()
-	joypad.set(variations[varCount])
+	--joypad.set(variations[varCount]);
 end
 
 local function console()
@@ -43,18 +44,41 @@ local function console()
 	end
 end
 
+local function backTrack(action)
+	lastPos = s16(player.x);
+	
+	print(action);
+
+	while pause do 
+		console();
+
+		joypad.set(action);
+		
+		emu.frameadvance();
+	end
+	pause = true;
+
+	if s16(player.x) > lastPos then
+		for i=1, 16, 1 do
+			backTrack(variations[i]);
+		end
+	end
+end
+
 local function load()
-	varCount = varCount + 1;
-	print(variations[varCount]);
+	pause = false;
 end
 savestate.registerload(load);
 
 --start
+for i=1, 16, 1 do
+	backTrack(variations[i]);
+end
 
 --update
-while true do
+--[[while true do
 	action();
 	console();
 
 	emu.frameadvance();--important
-end
+end]]
