@@ -14,6 +14,7 @@ local actions = {"Y", "B", "right", "left"};
 local variations = {};
 local diePlaces = {};
 local lastPos;
+local currentAction = {};
 local varCount = 1;
 local pause = true;
 
@@ -28,31 +29,37 @@ for i=1, 16, 1 do
     }
 end
 
-local function action()
-	--joypad.set(variations[varCount]);
+local function execute()
+	if(diePlaces[s16(player.x)] ~= nil)
+		currentAction = diePlaces[s16(player.x)];
+
+	joypad.set(currentAction);
 end
 
 local function console()
 	gui.text(10, 190, "X: " .. s16(player.x));
 	gui.text(10, 200, "Y: " .. s16(player.y));
-	gui.text(10, 210, "Speed: " .. s8(player.speed));
+	gui.text(50, 200, "lastPos: " .. lastPos);
 
 	local count = 40;
 	for i,v in pairs(diePlaces) do
-	    gui.text(200, count, "Die: " .. tostring(i));
+	    gui.text(200, count, "Die: " .. tostring(v));
 	    count = count + 10;
 	end
 end
 
-local function backTrack(action)
-	lastPos = s16(player.x);
-	
-	print(action);
+local function backTrack(action, index)
 
-	while pause do 
+	diePlaces[lastPos] = action;
+
+	--update
+	while pause do
 		console();
+		gui.text(50, 190, "Rec: " .. tostring(index));
+		gui.text(10, 210, "Move: " .. tostring(action));
 
-		joypad.set(action);
+		--joypad.set(action);
+		execute();
 		
 		emu.frameadvance();
 	end
@@ -60,20 +67,24 @@ local function backTrack(action)
 
 	if s16(player.x) > lastPos then
 		for i=1, 16, 1 do
-			backTrack(variations[i]);
+			backTrack(variations[i], index+1);
 		end
 	end
 end
 
 local function load()
+	lastPos = s16(player.x);
 	pause = false;
 end
 savestate.registerload(load);
 
 --start
 for i=1, 16, 1 do
-	backTrack(variations[i]);
+	backTrack(variations[i], 1);
 end
+
+--end
+print(":(");
 
 --update
 --[[while true do
