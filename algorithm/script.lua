@@ -13,10 +13,11 @@ local player = {
 local actions = {"Y", "B", "right", "left"};
 local variations = {};
 local diePlaces = {};
-local lastPos;
+local lastPos = 0;
 local currentAction = {};
 local varCount = 1;
 local pause = true;
+local currentPos;
 
 --functions
 --TODO: change it to a recursive function
@@ -30,8 +31,14 @@ for i=1, 16, 1 do
 end
 
 local function execute()
-	if(diePlaces[s16(player.x)] ~= nil)
-		currentAction = diePlaces[s16(player.x)];
+	local count = s16(player.x);
+	while count < s16(player.x)+50 do
+		if diePlaces[count] ~= nil then
+			currentAction = diePlaces[count];
+			break;
+		end
+		count = count + 1;
+	end
 
 	joypad.set(currentAction);
 end
@@ -40,17 +47,13 @@ local function console()
 	gui.text(10, 190, "X: " .. s16(player.x));
 	gui.text(10, 200, "Y: " .. s16(player.y));
 	gui.text(50, 200, "lastPos: " .. lastPos);
-
-	local count = 40;
-	for i,v in pairs(diePlaces) do
-	    gui.text(200, count, "Die: " .. tostring(v));
-	    count = count + 10;
-	end
 end
 
 local function backTrack(action, index)
 
-	diePlaces[lastPos] = action;
+	table.insert(diePlaces, lastPos, action);
+
+	print(action);
 
 	--update
 	while pause do
@@ -60,6 +63,8 @@ local function backTrack(action, index)
 
 		--joypad.set(action);
 		execute();
+
+		currentPos = s16(player.x);
 		
 		emu.frameadvance();
 	end
@@ -70,10 +75,12 @@ local function backTrack(action, index)
 			backTrack(variations[i], index+1);
 		end
 	end
+
+	table.remove(diePlaces, lastPos);
 end
 
 local function load()
-	lastPos = s16(player.x);
+	lastPos = currentPos;
 	pause = false;
 end
 savestate.registerload(load);
