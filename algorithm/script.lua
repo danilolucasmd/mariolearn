@@ -10,51 +10,47 @@ local player = {
 	onAir = 0x0072,
 };
 
-local actions = {"Y", "B", "right", "left"};
-local variations = {};
-local diePlaces = {};
-local lastPos;
-local varCount = 1;
+local enemy = {
+	number = 0x009e,
+	x_high = 0x14e0,
+	x_low = 0x00e4,
+	y_high = 0x14d4,
+	y_low = 0x00d8
+}
 
---functions
---TODO: change it to a recursive function
-for i=1, 16, 1 do
-    variations[i] = {
-    	Y = (math.floor(i/8%2) == 1), 
-    	B = (math.floor(i/4%2) == 1),
-    	right = (math.floor(i/2%2) == 1),
-    	left = (math.floor(i%2) == 1)
-    }
+local function signed(num, bits)
+    local maxval = 2^(bits - 1)
+    if num < maxval then return num else return num - 2*maxval end
 end
 
-local function action()
-	joypad.set(variations[varCount])
-end
+local enemies;
 
-local function console()
-	gui.text(10, 190, "X: " .. s16(player.x));
-	gui.text(10, 200, "Y: " .. s16(player.y));
-	gui.text(10, 210, "Speed: " .. s8(player.speed));
-
-	local count = 40;
-	for i,v in pairs(diePlaces) do
-	    gui.text(200, count, "Die: " .. tostring(i));
-	    count = count + 10;
-	end
-end
-
-local function load()
-	varCount = varCount + 1;
-	print(variations[varCount]);
-end
-savestate.registerload(load);
-
---start
-
---update
 while true do
-	action();
-	console();
+	enemies = {};
+
+	for i=0, 12, 1 do
+		local e = {};
+
+		e.number = u8(enemy.number + i);
+		e.x = 256*u8(enemy.x_high + i) + u8(enemy.x_low + i);
+		e.y = 256*u8(enemy.y_high + i) + u8(enemy.y_low + i);
+
+		e.x = signed(e.x, 16)
+    	e.y = signed(e.y, 16)
+
+		if e.number ~= 0 then
+			table.insert(enemies, e);
+		end
+	end
+
+	local count = 50;
+	for i=1, table.getn(enemies), 1 do
+		gui.text(120, count, "enemy: " .. tostring(enemies[i]));
+		count = count + 10;
+	end
+
+	gui.text(10, 200, "X: " .. s16(player.x));
+	gui.text(10, 210, "Y: " .. s16(player.y));
 
 	emu.frameadvance();--important
 end
