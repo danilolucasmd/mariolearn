@@ -67,3 +67,12 @@ DDraw/D3D Triple Buffering
 D3D Nearest
 D3D Bilinear
 F&ilter
+File not in Snes9x freeze format
+File not in Snes9x freeze format
+File not in Snes9x freeze format
+File not in Snes9x freeze format
+File not in Snes9x freeze format
+File not in Snes9x freeze format
+File not in Snes9x freeze format
+File not in Snes9x freeze format
+File not in Snes9x freeze format
