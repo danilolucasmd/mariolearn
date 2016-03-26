@@ -18,6 +18,13 @@ local enemy = {
 	x_low = 0x00e4,
 	y_high = 0x14d4,
 	y_low = 0x00d8,
+	x_offscreen = 0x15a0, 
+    y_offscreen = 0x186c,
+}
+
+local camera = {
+	x = 0x001a,
+    y = 0x001c,
 }
 
 local enemyReactions = {
@@ -46,18 +53,18 @@ local function console()
 	gui.text(10, 210, "Y: " .. s16(player.y));
 end
 
---[[local function getClosestEnemy()
-	local closest;
-	for i=1, table.getn(enemies), 1 do
-		if i==1 then 
-			closest = enemies[i];
-		end
-		if math.abs(enemies[i].x - s16(player.x)) < math.abs(closest.x - s16(player.x)) then
-			closest = enemies[i];
-		end
-	end
-	closestEnemy = closest;	
-end]]
+-- Converts the in-game (x, y) to SNES-screen coordinates
+local function screenCoordinates(x, y, camera_x, camera_y)    
+    local x_screen = (x - camera_x)
+    local y_screen = (y - camera_y) - 1
+    
+    return x_screen, y_screen
+end
+
+local function drawEnemy(screen_x, screen_y, color)
+	gui.line(screen_x+5, screen_y+5, screen_x+15, screen_y+5, color);
+	gui.line(screen_x+10, screen_y, screen_x+10, screen_y+10, color);
+end
 
 local function getEnemies()
 	enemies = {};
@@ -73,8 +80,11 @@ local function getEnemies()
 		e.x = signed(e.x, 16);
     	e.y = signed(e.y, 16);
 
+    	local screen_x, screen_y = screenCoordinates(e.x, e.y, s16(camera.x), s16(camera.y));
+
 		if e.st ~= 0 then
 			table.insert(enemies, e);
+			drawEnemy(screen_x, screen_y, "green");
 		end
 	end
 end
