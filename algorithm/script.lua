@@ -6,9 +6,11 @@ local player = {
 	x = 0x0094,
 	y = 0x0096,
 	speed = 0x007b,
-	animationTrigger = 0x0071,
-	onAir = 0x0072,
+	animation_trigger = 0x0071,
+	on_air = 0x0072,
+	on_ground = 0x13ef,
 	reaction = 55,
+	blocked_status = 0x0077, 
 };
 
 local enemy = {
@@ -25,6 +27,11 @@ local enemy = {
 local camera = {
 	x = 0x001a,
     y = 0x001c,
+    screens_number = 0x005d,
+    hscreen_number = 0x005e,
+    vscreen_number = 0x005f,
+    vertical_scroll = 0x1412,
+    camera_scroll_timer = 0x1401,
 }
 
 local enemyReactions = {
@@ -32,6 +39,9 @@ local enemyReactions = {
 	[0] = {Y=false, right=false, B=true},
 	[189] = {Y=false, right=false, A=true},
 	[171] = {Y=false, right=true, A=true},
+	[145] = {Y=false, right=true, A=true},
+	[159] = {Y=false, down=true, A=false},
+	[142] = {Y=false, right=true, A=true},
 }
 
 local enemies = {};
@@ -53,7 +63,6 @@ local function console()
 	gui.text(10, 210, "Y: " .. s16(player.y));
 end
 
--- Converts the in-game (x, y) to SNES-screen coordinates
 local function screenCoordinates(x, y, camera_x, camera_y)    
     local x_screen = (x - camera_x)
     local y_screen = (y - camera_y) - 1
@@ -64,6 +73,10 @@ end
 local function drawEnemy(screen_x, screen_y, color)
 	gui.line(screen_x+5, screen_y+5, screen_x+15, screen_y+5, color);
 	gui.line(screen_x+10, screen_y, screen_x+10, screen_y+10, color);
+end
+
+local function drawBlock(screen_x, screen_y, color)
+	gui.box(screen_x, screen_y, screen_x+1, screen_y+1, color);
 end
 
 local function getEnemies()
@@ -92,6 +105,11 @@ end
 local function playerAction()
 	joypad.set(1, {Y=true});
 	joypad.set(1, {right=true});
+
+	--mock
+	if(u8(player.blocked_status) == 5 or u8(player.on_air) ~= 0) then
+		joypad.set(1, {Y=false, right=true, B=true});
+	end
 
 	for i=1, table.getn(enemies), 1 do
 		if math.abs(enemies[i].x - s16(player.x)) < player.reaction then

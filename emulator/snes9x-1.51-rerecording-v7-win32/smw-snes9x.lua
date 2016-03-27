@@ -1618,6 +1618,7 @@ end
 
 
 local function get_map16_value(x_game, y_game)
+    print(x_game, y_game);
     local num_x = floor(x_game/16)
     local num_y = floor(y_game/16)
     if num_x < 0 or num_y < 0 then return end  -- 1st breakpoint
