@@ -2,6 +2,7 @@ local u8 = memory.readbyte;
 local s8 =  memory.readbytesigned
 local s16 = memory.readwordsigned;
 
+--variables
 local player = {
 	x = 0x0094,
 	y = 0x0096,
@@ -34,20 +35,33 @@ local camera = {
     camera_scroll_timer = 0x1401,
 }
 
-local enemyReactions = {
-	[5] = {Y=false, right=false, A=true},
-	[0] = {Y=false, right=false, B=true},
-	[189] = {Y=false, right=false, A=true},
-	[171] = {Y=false, right=true, A=true},
-	[145] = {Y=false, right=true, A=true},
-	[159] = {Y=false, down=true, A=false},
-	[142] = {Y=false, right=true, A=true},
-}
-
+local enemyReactions = {};
 local enemies = {};
 local closestEnemy = {};
 
 --functions
+--file IO functions
+local function loadFile(filename)
+	local file = io.open(filename, "r");
+	local response = file:read();
+	file:close();
+	return response;
+end
+
+local function saveFile(filename, obj)
+	local file = io.open(filename, "a");
+	file:write(tostring(obj));
+	file:flush();
+	file:close();
+end
+
+local function cleanFile(filename)
+	local file = io.open(filename, "w");
+	file:write("");
+	file:flush();
+	file:close();
+end
+
 local function signed(num, bits)
     local maxval = 2^(bits - 1);
     if num < maxval then return num else return num - 2*maxval end
@@ -119,6 +133,11 @@ local function playerAction()
 		end
 	end
 end
+
+--start
+--loading enemy reactions from file.
+local str_file = loadFile("er.lua");
+enemyReactions = loadstring("return ".. str_file)();
 
 --update
 while true do
