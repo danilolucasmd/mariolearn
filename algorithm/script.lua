@@ -10,25 +10,27 @@ local player = {
 	onAir = 0x0072,
 };
 
-local actions = {"Y", "B", "right", "left"};
-local variations = {};
 local diePlaces = {};
-local lastPos;
-local varCount = 1;
+local lastDie = 0;
+local jumpCount = 1;
+
+--get the fucking savestate #1
+local save_state = savestate.create(1);
 
 --functions
---TODO: change it to a recursive function
-for i=1, 16, 1 do
-    variations[i] = {
-    	Y = (math.floor(i/8%2) == 1), 
-    	B = (math.floor(i/4%2) == 1),
-    	right = (math.floor(i/2%2) == 1),
-    	left = (math.floor(i%2) == 1)
-    }
-end
-
 local function action()
-	joypad.set(variations[varCount])
+	joypad.set(1, {Y=1});
+	joypad.set(1, {right=1});
+
+	if u8(player.onAir) == 0 and diePlaces[jumpCount] ~= nil and s16(player.x) > diePlaces[jumpCount]-50 and s16(player.x) < diePlaces[jumpCount] then
+		joypad.set(1, {B=1});
+		jumpCount = jumpCount + 1;
+	end
+
+	if s8(player.speed) < 10 and s16(player.x) > 50 then
+		lastDie = s16(player.x);
+		savestate.load(save_state);
+	end
 end
 
 local function console()
@@ -36,20 +38,22 @@ local function console()
 	gui.text(10, 200, "Y: " .. s16(player.y));
 	gui.text(10, 210, "Speed: " .. s8(player.speed));
 
-	local count = 40;
-	for i,v in pairs(diePlaces) do
-	    gui.text(200, count, "Die: " .. tostring(i));
-	    count = count + 10;
-	end
-end
+	gui.text(50, 200, "lastDie: " .. lastDie);
+	gui.text(50, 210, "Moving: " .. tostring(u8(player.animationTrigger) == 0));
 
-local function load()
-	varCount = varCount + 1;
-	print(variations[varCount]);
+	gui.text(110, 200, "Jump: " .. jumpCount-1);
+	gui.text(110, 210, "NJump: " .. table.getn(diePlaces));
 end
-savestate.registerload(load);
 
 --start
+local function load()
+	if lastDie ~= 0 then
+		table.insert(diePlaces, lastDie);
+	end
+
+	jumpCount = 1;
+end
+savestate.registerload(load);
 
 --update
 while true do
