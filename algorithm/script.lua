@@ -90,7 +90,18 @@ local function drawEnemy(screen_x, screen_y, color)
 end
 
 local function drawBlock(screen_x, screen_y, color)
-	gui.box(screen_x, screen_y, screen_x+1, screen_y+1, color);
+	gui.line(screen_x, screen_y, screen_x+15, screen_y, color);
+	gui.line(screen_x, screen_y+15, screen_x+15, screen_y+15, color);
+
+	gui.line(screen_x, screen_y, screen_x, screen_y+15, color);
+	gui.line(screen_x+15, screen_y, screen_x+15, screen_y+15, color);
+end
+
+-- debug by game position
+local function debugger(game_x, game_y, text)
+	local screen_x, screen_y = screenCoordinates(game_x, game_y, s16(camera.x), s16(camera.y));
+	drawBlock(screen_x, screen_y, "purple");
+	gui.text(screen_x+3, screen_y+5, text);
 end
 
 local function getEnemies()
@@ -112,6 +123,35 @@ local function getEnemies()
 		if e.st ~= 0 then
 			table.insert(enemies, e);
 			drawEnemy(screen_x, screen_y, "green");
+		end
+	end
+end
+
+-- m16_x, m16_y from Map16 table.
+local function getTile(m16_x, m16_y)
+	local x = math.floor((s16(player.x)+m16_x+8)/16);
+	local y = math.floor((s16(player.y)+m16_y)/16);
+
+	local id = math.floor(x/0x10)*0x1B0 + y*0x10 + x%0x10;
+
+	-- x, y are game cordinates.
+	return x*16, y*16, u8(0x1C800 + id);
+end
+
+local function getBlocks()
+	-- size = 6*16
+	local size = 96;
+
+	for m16_y=-size, size, 16 do
+		for m16_x=-size, size, 16 do
+			local game_x, game_y, tile = getTile(m16_x, m16_y);
+
+			--debugger(game_x, game_y, tile);
+
+			if tile == 1 then
+				local screen_x, screen_y = screenCoordinates(game_x, game_y, s16(camera.x), s16(camera.y));
+				drawBlock(screen_x, screen_y, "red");
+			end
 		end
 	end
 end
@@ -142,6 +182,7 @@ enemyReactions = loadstring("return ".. str_file)();
 --update
 while true do
 	getEnemies();
+	getBlocks();
 	playerAction();
 	console();
 
