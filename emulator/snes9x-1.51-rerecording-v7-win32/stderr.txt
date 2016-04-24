@@ -1,3 +1,9 @@
+[1]: Ignoring invalid entry
+[5]: Ignoring invalid entry
+[20]: Ignoring invalid entry
+[24]: Ignoring invalid entry
+[163]: Ignoring invalid entry
+[167]: Ignoring invalid entry
 &Controls
 &Configure Controls...
 Controller On/Off

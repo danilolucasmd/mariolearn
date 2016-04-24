@@ -1,7 +1,8 @@
-Reading config file C:\Users\dsme\Documents\Arquivos\faculdade\mario-ia\emulator\snes9x-1.51-rerecording-v7-win32/snes9x.cfg
-Saving	config file	C:\Users\dsme\Documents\Arquivos\faculdade\mario-ia\emulator\snes9x-1.51-rerecording-v7-win32/snes9x.cfg
-Using ROM Super Mario World (USA).sfc in C:\Users\dsme\Documents\Arquivos\faculdade\mario-ia\emulator\Super Mario World (USA).zip
+Reading config file Z:\home\daniloluca\Documents\tcc\mario-ia\emulator\snes9x-1.51-rerecording-v7-win32/snes9x.cfg
+Saving	config file	Z:\home\daniloluca\Documents\tcc\mario-ia\emulator\snes9x-1.51-rerecording-v7-win32/snes9x.cfg
+Using ROM Super Mario World (USA).sfc in Z:\home\daniloluca\Documents\tcc\mario-ia\emulator\Super Mario World (USA).zip
 No ROM file header found.
 Map_LoROMMap
 "SUPER MARIOWORLD" [checksum ok] LoROM, 4Mbits, Type: ROM+RAM+BAT, Mode: 20, TV: NTSC, S-RAM: 2KB, ROMId: ____ Company: 01 CRC32: B19ED489
-Saving	config file	C:\Users\dsme\Documents\Arquivos\faculdade\mario-ia\emulator\snes9x-1.51-rerecording-v7-win32/snes9x.cfg
+Saving	config file	Z:\home\daniloluca\Documents\tcc\mario-ia\emulator\snes9x-1.51-rerecording-v7-win32/snes9x.cfg
+Saving	config file	Z:\home\daniloluca\Documents\tcc\mario-ia\emulator\snes9x-1.51-rerecording-v7-win32/snes9x.cfg
