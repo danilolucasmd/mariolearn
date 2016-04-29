@@ -11,7 +11,7 @@ local player = {
 	on_air = 0x0072,
 	on_ground = 0x13ef,
 	reaction = 55,
-	blocked_status = 0x0077, 
+	blocked_status = 0x0077,
 };
 
 local enemy = {
@@ -21,7 +21,7 @@ local enemy = {
 	x_low = 0x00e4,
 	y_high = 0x14d4,
 	y_low = 0x00d8,
-	x_offscreen = 0x15a0, 
+	x_offscreen = 0x15a0,
     y_offscreen = 0x186c,
 }
 
@@ -77,10 +77,10 @@ local function console()
 	gui.text(10, 210, "Y: " .. s16(player.y));
 end
 
-local function screenCoordinates(x, y, camera_x, camera_y)    
+local function screenCoordinates(x, y, camera_x, camera_y)
     local x_screen = (x - camera_x)
     local y_screen = (y - camera_y) - 1
-    
+
     return x_screen, y_screen
 end
 
@@ -127,15 +127,12 @@ local function getEnemies()
 	end
 end
 
--- m16_x, m16_y from Map16 table.
-local function getTile(m16_x, m16_y)
-	local x = math.floor((s16(player.x)+m16_x+8)/16);
-	local y = math.floor((s16(player.y)+m16_y)/16);
+local function getTile(map16_x, map16_y)
+	local game_x = math.floor((s16(player.x)+map16_x+8)/16);
+	local game_y = math.floor((s16(player.y)+map16_y)/16);
+	local id = math.floor(game_x/0x10)*0x1B0 + game_y*0x10 + game_x%0x10;
 
-	local id = math.floor(x/0x10)*0x1B0 + y*0x10 + x%0x10;
-
-	-- x, y are game cordinates.
-	return x*16, y*16, u8(0x1C800 + id);
+	return game_x*16, game_y*16, u8(0x1C800 + id);
 end
 
 local function getBlocks()
