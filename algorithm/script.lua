@@ -10,7 +10,10 @@ local player = {
 	animation_trigger = 0x0071,
 	on_air = 0x0072,
 	on_ground = 0x13ef,
-	reaction = 55,
+	reaction = {
+		x = 55,
+		y = 0,
+	},
 	blocked_status = 0x0077,
 };
 
@@ -22,22 +25,36 @@ local enemy = {
 	y_high = 0x14d4,
 	y_low = 0x00d8,
 	x_offscreen = 0x15a0,
-    y_offscreen = 0x186c,
+  	y_offscreen = 0x186c,
 }
+
+function Set (list)
+	local set = {}
+	for _, l in ipairs(list) do set[l] = true end
+	return set
+end
+
+local block = {
+	semi = Set {0, 1, 3, 4},
+	solid = Set {51, 52, 53, 54, 69}
+};
 
 local camera = {
 	x = 0x001a,
-    y = 0x001c,
-    screens_number = 0x005d,
-    hscreen_number = 0x005e,
-    vscreen_number = 0x005f,
-    vertical_scroll = 0x1412,
-    camera_scroll_timer = 0x1401,
+	y = 0x001c,
+	screens_number = 0x005d,
+	hscreen_number = 0x005e,
+	vscreen_number = 0x005f,
+	vertical_scroll = 0x1412,
+	camera_scroll_timer = 0x1401,
 }
 
 local enemyReactions = {};
 local enemies = {};
 local closestEnemy = {};
+
+local blockReactions = {};
+local blocks = {};
 
 --functions
 --file IO functions
@@ -108,12 +125,12 @@ local function getEnemies()
 	enemies = {};
 
 	for i=0, 12, 1 do
-		local e = {};
-
-		e.x = 256*u8(enemy.x_high + i) + u8(enemy.x_low + i);
-		e.y = 256*u8(enemy.y_high + i) + u8(enemy.y_low + i);
-		e.num = u8(enemy.number + i);
-		e.st = u8(enemy.status + i);
+		local e = {
+			x = 256*u8(enemy.x_high + i) + u8(enemy.x_low + i),
+			y = 256*u8(enemy.y_high + i) + u8(enemy.y_low + i),
+			num = u8(enemy.number + i),
+			st = u8(enemy.status + i)
+		};
 
 		e.x = signed(e.x, 16);
     	e.y = signed(e.y, 16);
@@ -122,7 +139,7 @@ local function getEnemies()
 
 		if e.st ~= 0 then
 			table.insert(enemies, e);
-			drawEnemy(screen_x, screen_y, "green");
+			drawEnemy(screen_x, screen_y, "red");
 		end
 	end
 end
@@ -132,12 +149,12 @@ local function getTile(map16_x, map16_y)
 	local game_y = math.floor((s16(player.y)+map16_y)/16);
 	local id = math.floor(game_x/0x10)*0x1B0 + game_y*0x10 + game_x%0x10;
 
-	return game_x*16, game_y*16, u8(0x1C800 + id);
+	return game_x*16, game_y*16, u8(0x7EC800 + id);
 end
 
 local function getBlocks()
 	-- size = 6*16
-	local size = 96;
+	local size = 128;
 
 	for m16_y=-size, size, 16 do
 		for m16_x=-size, size, 16 do
@@ -145,9 +162,23 @@ local function getBlocks()
 
 			--debugger(game_x, game_y, tile);
 
-			if tile == 1 then
+			-- Green ground
+			if block.semi[tile] then
+				local screen_x, screen_y = screenCoordinates(game_x, game_y, s16(camera.x), s16(camera.y));
+				drawBlock(screen_x, screen_y, "green");
+			end
+
+			if block.solid[tile] then
 				local screen_x, screen_y = screenCoordinates(game_x, game_y, s16(camera.x), s16(camera.y));
 				drawBlock(screen_x, screen_y, "red");
+
+				local b = {
+					x = game_x,
+					y = game_y,
+					num = tile
+				};
+
+				table.insert(blocks, b);
 			end
 		end
 	end
@@ -157,13 +188,21 @@ local function playerAction()
 	joypad.set(1, {Y=true});
 	joypad.set(1, {right=true});
 
-	--mock
-	if(u8(player.blocked_status) == 5 or u8(player.on_air) ~= 0) then
-		joypad.set(1, {Y=false, right=true, B=true});
+	for i=1, table.getn(blocks), 1 do
+		if (blocks[i].y - s16(player.y)) > player.reaction.y and math.abs(blocks[i].x - s16(player.x)) < player.reaction.x then
+			if blockReactions[blocks[i].num] ~= nil then
+				joypad.set(blockReactions[blocks[i].num]);
+			end
+		end
+	end
+
+	-- FIXME
+	if u8(player.blocked_status) == 5 then
+		joypad.set(1, {Y=true, right=true, A=true});
 	end
 
 	for i=1, table.getn(enemies), 1 do
-		if math.abs(enemies[i].x - s16(player.x)) < player.reaction then
+		if math.abs(enemies[i].x - s16(player.x)) < player.reaction.x then
 			if enemyReactions[enemies[i].num] ~= nil then
 				joypad.set(enemyReactions[enemies[i].num]);
 			end
@@ -173,8 +212,11 @@ end
 
 --start
 --loading enemy reactions from file.
-local str_file = loadFile("er.lua");
-enemyReactions = loadstring("return ".. str_file)();
+local str_er_file = loadFile("er.lua");
+local str_bl_file = loadFile("bl.lua");
+enemyReactions = loadstring("return ".. str_er_file)();
+blockReactions = loadstring("return ".. str_bl_file)();
+
 
 --update
 while true do
