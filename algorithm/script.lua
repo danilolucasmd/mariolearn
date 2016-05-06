@@ -101,7 +101,7 @@ local function screenCoordinates(x, y, camera_x, camera_y)
     return x_screen, y_screen
 end
 
-local function drawEnemy(screen_x, screen_y, color)
+local function drawSprite(screen_x, screen_y, color)
 	gui.line(screen_x+5, screen_y+5, screen_x+15, screen_y+5, color);
 	gui.line(screen_x+10, screen_y, screen_x+10, screen_y+10, color);
 end
@@ -121,7 +121,7 @@ local function debugger(game_x, game_y, text)
 	gui.text(screen_x+3, screen_y+5, text);
 end
 
-local function getEnemies()
+local function getSprites()
 	enemies = {};
 
 	for i=0, 12, 1 do
@@ -139,7 +139,7 @@ local function getEnemies()
 
 		if e.st ~= 0 then
 			table.insert(enemies, e);
-			drawEnemy(screen_x, screen_y, "red");
+			drawSprite(screen_x, screen_y, "red");
 		end
 	end
 end
@@ -220,7 +220,7 @@ blockReactions = loadstring("return ".. str_bl_file)();
 
 --update
 while true do
-	getEnemies();
+	getSprites();
 	getBlocks();
 	playerAction();
 	console();
