@@ -51,7 +51,6 @@ local camera = {
 
 local enemyReactions = {};
 local enemies = {};
-local closestEnemy = {};
 
 local blockReactions = {};
 local blocks = {};
@@ -86,7 +85,7 @@ end
 
 local function console()
 	local count = 50;
-	for i=1, table.getn(enemies), 1 do
+	for i=1, #enemies, 1 do
 		gui.text(110, count, "enemy: " .. tostring(enemies[i]));
 		count = count + 10;
 	end
@@ -154,7 +153,7 @@ end
 
 local function getBlocks()
 	-- size = 6*16
-	local size = 128;
+	local size = 160;
 
 	for m16_y=-size, size, 16 do
 		for m16_x=-size, size, 16 do
@@ -188,7 +187,7 @@ local function playerAction()
 	joypad.set(1, {Y=true});
 	joypad.set(1, {right=true});
 
-	for i=1, table.getn(blocks), 1 do
+	for i=1, #blocks, 1 do
 		if (blocks[i].y - s16(player.y)) > player.reaction.y and math.abs(blocks[i].x - s16(player.x)) < player.reaction.x then
 			if blockReactions[blocks[i].num] ~= nil then
 				joypad.set(blockReactions[blocks[i].num]);
@@ -201,7 +200,7 @@ local function playerAction()
 		joypad.set(1, {Y=true, right=true, A=true});
 	end
 
-	for i=1, table.getn(enemies), 1 do
+	for i=1, #enemies, 1 do
 		if math.abs(enemies[i].x - s16(player.x)) < player.reaction.x then
 			if enemyReactions[enemies[i].num] ~= nil then
 				joypad.set(enemyReactions[enemies[i].num]);
