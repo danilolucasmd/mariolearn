@@ -55,6 +55,20 @@ local enemies = {};
 local blockReactions = {};
 local blocks = {};
 
+local actions = {"Y", "B", "right", "left"};
+local variations = {};
+
+--calculation actions.
+--TODO change it to a recursive function
+for i=1, 16, 1 do
+    variations[i] = {
+    	Y = (math.floor(i/8%2) == 1),
+    	B = (math.floor(i/4%2) == 1),
+    	right = (math.floor(i/2%2) == 1),
+    	left = (math.floor(i%2) == 1)
+    }
+end
+
 --functions
 --file IO functions
 local function loadFile(filename)
@@ -216,6 +230,7 @@ local str_bl_file = loadFile("bl.lua");
 enemyReactions = loadstring("return ".. str_er_file)();
 blockReactions = loadstring("return ".. str_bl_file)();
 
+print(variations);
 
 --update
 while true do
