@@ -17,7 +17,7 @@ local player = {
 	blocked_status = 0x0077,
 };
 
-local enemy = {
+local sprite = {
 	number = 0x009e,
 	status = 0x14c8,
 	x_high = 0x14e0,
@@ -49,8 +49,8 @@ local camera = {
 	camera_scroll_timer = 0x1401,
 }
 
-local enemyReactions = {};
-local enemies = {};
+local spriteReactions = {};
+local sprites = {};
 
 local blockReactions = {};
 local blocks = {};
@@ -99,8 +99,8 @@ end
 
 local function console()
 	local count = 50;
-	for i=1, #enemies, 1 do
-		gui.text(110, count, "enemy: " .. tostring(enemies[i]));
+	for i=1, #sprites, 1 do
+		gui.text(110, count, "sprite: " .. tostring(sprites[i]));
 		count = count + 10;
 	end
 	gui.text(10, 200, "X: " .. s16(player.x));
@@ -135,14 +135,14 @@ local function debugger(game_x, game_y, text)
 end
 
 local function getSprites()
-	enemies = {};
+	sprites = {};
 
 	for i=0, 12, 1 do
 		local e = {
-			x = 256*u8(enemy.x_high + i) + u8(enemy.x_low + i),
-			y = 256*u8(enemy.y_high + i) + u8(enemy.y_low + i),
-			num = u8(enemy.number + i),
-			st = u8(enemy.status + i)
+			x = 256*u8(sprite.x_high + i) + u8(sprite.x_low + i),
+			y = 256*u8(sprite.y_high + i) + u8(sprite.y_low + i),
+			num = u8(sprite.number + i),
+			st = u8(sprite.status + i)
 		};
 
 		e.x = signed(e.x, 16);
@@ -151,7 +151,7 @@ local function getSprites()
     	local screen_x, screen_y = screenCoordinates(e.x, e.y, s16(camera.x), s16(camera.y));
 
 		if e.st ~= 0 then
-			table.insert(enemies, e);
+			table.insert(sprites, e);
 			drawSprite(screen_x, screen_y, "red");
 		end
 	end
@@ -214,21 +214,21 @@ local function playerAction()
 		joypad.set(1, {Y=true, right=true, A=true});
 	end
 
-	for i=1, #enemies, 1 do
-		if math.abs(enemies[i].x - s16(player.x)) < player.reaction.x then
-			if enemyReactions[enemies[i].num] ~= nil then
-				joypad.set(enemyReactions[enemies[i].num]);
+	for i=1, #sprites, 1 do
+		if math.abs(sprites[i].x - s16(player.x)) < player.reaction.x then
+			if spriteReactions[sprites[i].num] ~= nil then
+				joypad.set(spriteReactions[sprites[i].num]);
 			end
 		end
 	end
 end
 
 --start
---loading enemy reactions from file.
-local str_er_file = loadFile("er.lua");
-local str_bl_file = loadFile("bl.lua");
-enemyReactions = loadstring("return ".. str_er_file)();
-blockReactions = loadstring("return ".. str_bl_file)();
+--loading sprite reactions from file.
+local rsprite_file = loadFile("rsprite.lua");
+local rblock_file = loadFile("rblock.lua");
+spriteReactions = loadstring("return ".. rsprite_file)();
+blockReactions = loadstring("return ".. rblock_file)();
 
 print(variations);
 
