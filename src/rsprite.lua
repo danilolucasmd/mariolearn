@@ -1,1 +1,1 @@
-{[5]={action={A=false, right=false, Y=false, B=true}, index=2}, [145]={action={A=false, right=false, Y=false, B=true}, index=2}}
+{[5]={[8]={[367]={action={A=false, right=true, Y=false, B=false}, index=1}}, [2]={[345]={action={A=false, right=false, Y=true, B=false}, index=4}}}}

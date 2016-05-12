@@ -106,9 +106,9 @@ end
 local function signed(num, bits)
     local maxval = 2^(bits - 1);
 
-    if num < maxval then 
+    if num < maxval then
     	return num;
-    else 
+    else
     	return num - 2*maxval;
     end
 end
@@ -215,28 +215,44 @@ end
 
 local function playerDeath()
 	-- TODO need to be the number of the enemy how kill the player, not the closest.
-	local num = sprites[#sprites].num;
+	local sprite = sprites[#sprites];
+	local newReact = {
+		action = variations[1],
+		index = 1
+	};
 
-	if spriteReactions[num] == nil then
-		spriteReactions[num] = {
-			action = variations[1],
-			index = 1
+	if spriteReactions[sprite.num] == nil then
+		spriteReactions[sprite.num] = {
+			[sprite.st] = {
+				[sprite.y] = newReact;
+			}
+		};
+	else if spriteReactions[sprite.num][sprite.st] == nil then
+		spriteReactions[sprite.num][sprite.st] = {
+			[sprite.y] = newReact;
 		}
+	else if spriteReactions[sprite.num][sprite.st][sprite.y] == nil then
+		spriteReactions[sprite.num][sprite.st][sprite.y] = newReact;
 	else
-		local index = spriteReactions[num].index;
+		local index = spriteReactions[sprite.num][sprite.st][sprite.y].index;
 
 		if index < #variations then
 			index = index + 1;
-			spriteReactions[num].action = variations[index];
-			spriteReactions[num].index = index;
+			spriteReactions[sprite.num][sprite.st][sprite.y].action = variations[index];
+			spriteReactions[sprite.num][sprite.st][sprite.y].index = index;
 		else
 			print("you shall not pass!");
 		end
 	end
+	end
+	end
 
 	-- save new values in the base
 	-- TODO find a way to get this path dynamically
-	saveFile("/home/daniloluca/Documents/mario-ia/src/rsprite.lua", spriteReactions);
+	-- linux
+	-- saveFile("/home/daniloluca/Documents/mario-ia/src/rsprite.lua", spriteReactions);
+	-- windows
+	saveFile("C:/Users/dsme/Documents/my_documents/mario-ia/src/rsprite.lua", spriteReactions);
 
 	-- reload level
 	savestate.load(savestate.create(1));
@@ -265,10 +281,22 @@ local function playerAction()
 	end
 
 	-- sprite action
+	-----------------------------
+	-- sprite_number
+		-- sprite_state
+			-- sprite_situation
+				-- action
+				-- index
+	-----------------------------
 	for i=1, #sprites, 1 do
-		if math.abs(sprites[i].x - s16(player.x)) < player.reaction.x then
-			if spriteReactions[sprites[i].num] ~= nil then
-				joypad.set(spriteReactions[sprites[i].num].action);
+		local sprite = sprites[i];
+		if math.abs(sprite.x - s16(player.x)) < player.reaction.x then
+			if spriteReactions[sprite.num] ~= nil then
+				if spriteReactions[sprite.num][sprite.st] ~= nil then
+					if spriteReactions[sprite.num][sprite.st][sprite.y] then
+						joypad.set(spriteReactions[sprite.num][sprite.st][sprite.y].action);
+					end
+				end
 			end
 		end
 	end
