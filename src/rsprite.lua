@@ -1,1 +1,1 @@
-{[0]={Y=false, right=false, B=true}, [159]={Y=false, down=true, A=false}, [145]={Y=false, right=true, A=true}, [142]={Y=false, right=true, A=true}, [171]={Y=false, right=true, A=true}, [5]={Y=false, right=false, A=true}, [189]={Y=false, right=false, A=true}}
+{[5]={action={A=false, right=false, Y=false, B=true}, index=2}, [145]={action={A=false, right=false, Y=false, B=true}, index=2}}

@@ -2,7 +2,7 @@ local u8 = memory.readbyte;
 local s8 =  memory.readbytesigned
 local s16 = memory.readwordsigned;
 
---variables
+-- variables
 local player = {
 	x = 0x0094,
 	y = 0x0096,
@@ -58,31 +58,38 @@ local blocks = {};
 local actions = {"Y", "B", "right", "left"};
 local variations = {};
 
---calculation actions.
---TODO change it to a recursive function
+-- calculation actions.
+-- TODO change it to a recursive function
 for i=1, 16, 1 do
     variations[i] = {
-    	Y = (math.floor(i/8%2) == 1),
-    	B = (math.floor(i/4%2) == 1),
-    	right = (math.floor(i/2%2) == 1),
-    	left = (math.floor(i%2) == 1)
+    	A = (math.floor(i/8%2) == 1),
+    	Y = (math.floor(i/4%2) == 1),
+    	B = (math.floor(i/2%2) == 1),
+    	right = (math.floor(i%2) == 1)
     }
 end
 
---functions
---file IO functions
-local function loadFile(filename)
-	local file = io.open(filename, "r");
-	local response = file:read();
-	file:close();
-	return response;
-end
+-- get the fucking savestate #1
+-- local save_state = savestate.create(1);
 
+-- functions
+-- file IO functions
 local function saveFile(filename, obj)
-	local file = io.open(filename, "a");
+	local file = io.open(filename, "w");
 	file:write(tostring(obj));
 	file:flush();
 	file:close();
+end
+
+local function loadFile(filename)
+	local file = io.open(filename, "r");
+	if file == nil then
+		saveFile(filename, {});
+		file = io.open(filename, "r");
+	end
+	local response = file:read();
+	file:close();
+	return response;
 end
 
 local function cleanFile(filename)
@@ -92,9 +99,18 @@ local function cleanFile(filename)
 	file:close();
 end
 
+local function removeFile(filename)
+	os.remove(filename);
+end
+
 local function signed(num, bits)
     local maxval = 2^(bits - 1);
-    if num < maxval then return num else return num - 2*maxval end
+
+    if num < maxval then 
+    	return num;
+    else 
+    	return num - 2*maxval;
+    end
 end
 
 local function console()
@@ -108,10 +124,10 @@ local function console()
 end
 
 local function screenCoordinates(x, y, camera_x, camera_y)
-    local x_screen = (x - camera_x)
-    local y_screen = (y - camera_y) - 1
+    local x_screen = (x - camera_x);
+    local y_screen = (y - camera_y) - 1;
 
-    return x_screen, y_screen
+    return x_screen, y_screen;
 end
 
 local function drawSprite(screen_x, screen_y, color)
@@ -173,7 +189,7 @@ local function getBlocks()
 		for m16_x=-size, size, 16 do
 			local game_x, game_y, tile = getTile(m16_x, m16_y);
 
-			--debugger(game_x, game_y, tile);
+			-- debugger(game_x, game_y, tile);
 
 			-- Green ground
 			if block.semi[tile] then
@@ -197,10 +213,44 @@ local function getBlocks()
 	end
 end
 
+local function playerDeath()
+	-- TODO need to be the number of the enemy how kill the player, not the closest.
+	local num = sprites[#sprites].num;
+
+	if spriteReactions[num] == nil then
+		spriteReactions[num] = {
+			action = variations[1],
+			index = 1
+		}
+	else
+		local index = spriteReactions[num].index;
+
+		if index < #variations then
+			index = index + 1;
+			spriteReactions[num].action = variations[index];
+			spriteReactions[num].index = index;
+		else
+			print("you shall not pass!");
+		end
+	end
+
+	-- save new values in the base
+	-- TODO find a way to get this path dynamically
+	saveFile("/home/daniloluca/Documents/mario-ia/src/rsprite.lua", spriteReactions);
+
+	-- reload level
+	savestate.load(savestate.create(1));
+end
+
+local function playerBlock()
+
+end
+
 local function playerAction()
 	joypad.set(1, {Y=true});
 	joypad.set(1, {right=true});
 
+	-- block action
 	for i=1, #blocks, 1 do
 		if (blocks[i].y - s16(player.y)) > player.reaction.y and math.abs(blocks[i].x - s16(player.x)) < player.reaction.x then
 			if blockReactions[blocks[i].num] ~= nil then
@@ -214,30 +264,34 @@ local function playerAction()
 		joypad.set(1, {Y=true, right=true, A=true});
 	end
 
+	-- sprite action
 	for i=1, #sprites, 1 do
 		if math.abs(sprites[i].x - s16(player.x)) < player.reaction.x then
 			if spriteReactions[sprites[i].num] ~= nil then
-				joypad.set(spriteReactions[sprites[i].num]);
+				joypad.set(spriteReactions[sprites[i].num].action);
 			end
 		end
 	end
+
+	-- player die
+	if u8(player.animation_trigger) ~= 0 then
+		playerDeath();
+	end
 end
 
---start
---loading sprite reactions from file.
-local rsprite_file = loadFile("rsprite.lua");
-local rblock_file = loadFile("rblock.lua");
+-- start
+-- loading sprite reactions from file.
+local rsprite_file = loadFile("rsprite.lua"); -- ok
+local rblock_file = loadFile("rblock.lua"); -- nok
 spriteReactions = loadstring("return ".. rsprite_file)();
 blockReactions = loadstring("return ".. rblock_file)();
 
-print(variations);
-
---update
+-- update
 while true do
 	getSprites();
 	getBlocks();
 	playerAction();
 	console();
 
-	emu.frameadvance();--important
+	emu.frameadvance();-- important
 end
