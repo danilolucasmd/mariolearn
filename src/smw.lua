@@ -130,9 +130,11 @@ local function screenCoordinates(x, y, camera_x, camera_y)
     return x_screen, y_screen;
 end
 
-local function drawSprite(screen_x, screen_y, color)
+local function drawSprite(screen_x, screen_y, color, num, st)
 	gui.line(screen_x+5, screen_y+5, screen_x+15, screen_y+5, color);
 	gui.line(screen_x+10, screen_y, screen_x+10, screen_y+10, color);
+	gui.text(screen_x, screen_y, num);
+	gui.text(screen_x+16, screen_y, st);
 end
 
 local function drawBlock(screen_x, screen_y, color)
@@ -168,7 +170,7 @@ local function getSprites()
 
 		if e.st ~= 0 then
 			table.insert(sprites, e);
-			drawSprite(screen_x, screen_y, "red");
+			drawSprite(screen_x, screen_y, "red", e.num, e.st);
 		end
 	end
 end
@@ -215,7 +217,14 @@ end
 
 local function playerDeath()
 	-- TODO need to be the number of the enemy how kill the player, not the closest.
-	local sprite = sprites[#sprites];
+	local sprite = sprites[1];
+	for i=1, #sprites, 1 do
+		if math.abs(s16(player.x) - sprites[i].x) <  math.abs(s16(player.x) - sprite.x) then
+			sprite = sprites[i];
+		end
+	end
+
+	local situation = math.abs(s16(player.y) - sprite.y);
 	local newReact = {
 		action = variations[1],
 		index = 1
@@ -224,22 +233,22 @@ local function playerDeath()
 	if spriteReactions[sprite.num] == nil then
 		spriteReactions[sprite.num] = {
 			[sprite.st] = {
-				[sprite.y] = newReact;
+				[situation] = newReact;
 			}
 		};
 	else if spriteReactions[sprite.num][sprite.st] == nil then
 		spriteReactions[sprite.num][sprite.st] = {
-			[sprite.y] = newReact;
+			[situation] = newReact;
 		}
-	else if spriteReactions[sprite.num][sprite.st][sprite.y] == nil then
-		spriteReactions[sprite.num][sprite.st][sprite.y] = newReact;
+	else if spriteReactions[sprite.num][sprite.st][situation] == nil then
+		spriteReactions[sprite.num][sprite.st][situation] = newReact;
 	else
-		local index = spriteReactions[sprite.num][sprite.st][sprite.y].index;
+		local index = spriteReactions[sprite.num][sprite.st][situation].index;
 
 		if index < #variations then
 			index = index + 1;
-			spriteReactions[sprite.num][sprite.st][sprite.y].action = variations[index];
-			spriteReactions[sprite.num][sprite.st][sprite.y].index = index;
+			spriteReactions[sprite.num][sprite.st][situation].action = variations[index];
+			spriteReactions[sprite.num][sprite.st][situation].index = index;
 		else
 			print("you shall not pass!");
 		end
@@ -250,9 +259,9 @@ local function playerDeath()
 	-- save new values in the base
 	-- TODO find a way to get this path dynamically
 	-- linux
-	-- saveFile("/home/daniloluca/Documents/mario-ia/src/rsprite.lua", spriteReactions);
+	saveFile("/home/daniloluca/Documents/mario-ia/src/rsprite.lua", spriteReactions);
 	-- windows
-	saveFile("C:/Users/dsme/Documents/my_documents/mario-ia/src/rsprite.lua", spriteReactions);
+	--saveFile("C:/Users/dsme/Documents/my_documents/mario-ia/src/rsprite.lua", spriteReactions);
 
 	-- reload level
 	savestate.load(savestate.create(1));
@@ -290,11 +299,13 @@ local function playerAction()
 	-----------------------------
 	for i=1, #sprites, 1 do
 		local sprite = sprites[i];
+		local situation = math.abs(s16(player.y) - sprite.y);
+
 		if math.abs(sprite.x - s16(player.x)) < player.reaction.x then
 			if spriteReactions[sprite.num] ~= nil then
 				if spriteReactions[sprite.num][sprite.st] ~= nil then
-					if spriteReactions[sprite.num][sprite.st][sprite.y] then
-						joypad.set(spriteReactions[sprite.num][sprite.st][sprite.y].action);
+					if spriteReactions[sprite.num][sprite.st][situation] ~= nil then
+						joypad.set(spriteReactions[sprite.num][sprite.st][situation].action);
 					end
 				end
 			end
