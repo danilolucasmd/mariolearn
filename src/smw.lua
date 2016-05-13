@@ -215,6 +215,19 @@ local function getBlocks()
 	end
 end
 
+-- TODO parameters and return can be modify to admit more complex situations.
+local function generateSituationID(sprite_num, sprite_st, sprite_y)
+	local number = tostring(sprite_num);
+	local state = tostring(sprite_st);
+	local position = tostring(math.abs(s16(player.y) - sprite_y));
+	
+   	local id = number .. state .. position;
+
+   	-- TODO hash algorithm to always generate ids with the same size.
+
+   	return id;
+end
+
 local function playerDeath()
 	-- TODO need to be the number of the enemy how kill the player, not the closest.
 	local sprite = sprites[1];
@@ -224,44 +237,31 @@ local function playerDeath()
 		end
 	end
 
-	local situation = math.abs(s16(player.y) - sprite.y);
-	local newReact = {
-		action = variations[1],
-		index = 1
-	};
+	local situation = generateSituationID(sprite.num, sprite.st, sprite.y);
 
-	if spriteReactions[sprite.num] == nil then
-		spriteReactions[sprite.num] = {
-			[sprite.st] = {
-				[situation] = newReact;
-			}
+	if spriteReactions[situation] == nil then
+		spriteReactions[situation] = {
+			action = variations[1],
+			index = 1
 		};
-	else if spriteReactions[sprite.num][sprite.st] == nil then
-		spriteReactions[sprite.num][sprite.st] = {
-			[situation] = newReact;
-		}
-	else if spriteReactions[sprite.num][sprite.st][situation] == nil then
-		spriteReactions[sprite.num][sprite.st][situation] = newReact;
 	else
-		local index = spriteReactions[sprite.num][sprite.st][situation].index;
+		local index = spriteReactions[situation].index;
 
 		if index < #variations then
 			index = index + 1;
-			spriteReactions[sprite.num][sprite.st][situation].action = variations[index];
-			spriteReactions[sprite.num][sprite.st][situation].index = index;
+			spriteReactions[situation].action = variations[index];
+			spriteReactions[situation].index = index;
 		else
 			print("you shall not pass!");
 		end
-	end
-	end
 	end
 
 	-- save new values in the base
 	-- TODO find a way to get this path dynamically
 	-- linux
-	saveFile("/home/daniloluca/Documents/mario-ia/src/rsprite.lua", spriteReactions);
+	-- saveFile("/home/daniloluca/Documents/mario-ia/src/rsprite.lua", spriteReactions);
 	-- windows
-	--saveFile("C:/Users/dsme/Documents/my_documents/mario-ia/src/rsprite.lua", spriteReactions);
+	saveFile("C:/Users/dsme/Documents/my_documents/mario-ia/src/rsprite.lua", spriteReactions);
 
 	-- reload level
 	savestate.load(savestate.create(1));
@@ -290,24 +290,14 @@ local function playerAction()
 	end
 
 	-- sprite action
-	-----------------------------
-	-- sprite_number
-		-- sprite_state
-			-- sprite_situation
-				-- action
-				-- index
-	-----------------------------
 	for i=1, #sprites, 1 do
 		local sprite = sprites[i];
-		local situation = math.abs(s16(player.y) - sprite.y);
 
 		if math.abs(sprite.x - s16(player.x)) < player.reaction.x then
-			if spriteReactions[sprite.num] ~= nil then
-				if spriteReactions[sprite.num][sprite.st] ~= nil then
-					if spriteReactions[sprite.num][sprite.st][situation] ~= nil then
-						joypad.set(spriteReactions[sprite.num][sprite.st][situation].action);
-					end
-				end
+			local situation = generateSituationID(sprite.num, sprite.st, sprite.y);
+			
+			if spriteReactions[situation] ~= nil then
+				joypad.set(spriteReactions[situation].action);
 			end
 		end
 	end
