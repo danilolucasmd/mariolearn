@@ -12,7 +12,7 @@ local player = {
 	on_ground = 0x13ef,
 	reaction = {
 		x = 55,
-		y = 0,
+		y = 30,
 	},
 	blocked_status = 0x0077,
 };
@@ -121,6 +121,7 @@ local function console()
 	end
 	gui.text(10, 200, "X: " .. s16(player.x));
 	gui.text(10, 210, "Y: " .. s16(player.y));
+	gui.text(50, 210, "Speed: " .. u8(player.speed));
 end
 
 local function screenCoordinates(x, y, camera_x, camera_y)
@@ -137,12 +138,24 @@ local function drawSprite(screen_x, screen_y, color, num, st)
 	gui.text(screen_x+16, screen_y, st);
 end
 
-local function drawBlock(screen_x, screen_y, color)
-	gui.line(screen_x, screen_y, screen_x+15, screen_y, color);
-	gui.line(screen_x, screen_y+15, screen_x+15, screen_y+15, color);
+local function drawBlock(screen_x, screen_y, width, height, color)
+	gui.line(screen_x, screen_y, screen_x+width, screen_y, color);
+	gui.line(screen_x, screen_y+height, screen_x+width, screen_y+height, color);
 
-	gui.line(screen_x, screen_y, screen_x, screen_y+15, color);
-	gui.line(screen_x+15, screen_y, screen_x+15, screen_y+15, color);
+	gui.line(screen_x, screen_y, screen_x, screen_y+height, color);
+	gui.line(screen_x+width, screen_y, screen_x+width, screen_y+height, color);
+end
+
+local function drawFieldOfView()
+	local x_screen, y_screen = screenCoordinates(s16(player.x), s16(player.y)+15, s16(camera.x), s16(camera.y));
+
+	x_screen = x_screen - player.reaction.x;
+	y_screen = y_screen - player.reaction.y;
+
+	local width = (player.reaction.x*2)+15;
+	local height = (player.reaction.y*2)+15;
+
+	drawBlock(x_screen, y_screen, width, height, "grey");
 end
 
 -- debug by game position
@@ -196,12 +209,12 @@ local function getBlocks()
 			-- Green ground
 			if block.semi[tile] then
 				local screen_x, screen_y = screenCoordinates(game_x, game_y, s16(camera.x), s16(camera.y));
-				drawBlock(screen_x, screen_y, "green");
+				drawBlock(screen_x, screen_y, 15, 15, "green");
 			end
 
 			if block.solid[tile] then
 				local screen_x, screen_y = screenCoordinates(game_x, game_y, s16(camera.x), s16(camera.y));
-				drawBlock(screen_x, screen_y, "red");
+				drawBlock(screen_x, screen_y, 15, 15, "red");
 
 				local b = {
 					x = game_x,
@@ -215,53 +228,80 @@ local function getBlocks()
 	end
 end
 
--- TODO parameters and return can be modify to admit more complex situations.
-local function generateSituationID(sprite_num, sprite_st, sprite_y)
-	local number = tostring(sprite_num);
-	local state = tostring(sprite_st);
-	local position = tostring(math.abs(s16(player.y) - sprite_y));
-	
-   	local id = number .. state .. position;
+-- situation model
+------------------------------
+-- situation_number
+	-- situation_state
+		-- situation_position
+			-- action
+			-- index
+------------------------------
+local function generateSituation(elements)
+	local s = {
+		num = "",
+		st = "",
+		y = ""
+	};
 
-   	-- TODO hash algorithm to always generate ids with the same size.
+	for i=1, #elements, 1 do
+		s.num = s.num .. tostring(elements[i].num);
+		s.st = s.st .. tostring(elements[i].st);
+		s.y = s.y .. tostring(elements[i].y);
+	end
 
-   	return id;
+   	return s;
 end
 
-local function playerDeath()
-	-- TODO need to be the number of the enemy how kill the player, not the closest.
-	local sprite = sprites[1];
+local function getClosestSprites()
+	local cs = {};
+
 	for i=1, #sprites, 1 do
-		if math.abs(s16(player.x) - sprites[i].x) <  math.abs(s16(player.x) - sprite.x) then
-			sprite = sprites[i];
+		if math.abs(s16(player.x) - sprites[i].x) <= player.reaction.x and math.abs(s16(player.y) - sprites[i].y) <= player.reaction.y then
+			table.insert(cs, sprites[i]);
 		end
 	end
 
-	local situation = generateSituationID(sprite.num, sprite.st, sprite.y);
+	return cs;
+end
 
-	if spriteReactions[situation] == nil then
-		spriteReactions[situation] = {
-			action = variations[1],
-			index = 1
+local function playerDeath(situation)
+	local newReact = {
+		action = variations[1],
+		index = 1
+	};
+
+	if spriteReactions[situation.num] == nil then
+		spriteReactions[situation.num] = {
+			[situation.st] = {
+				[situation.y] = newReact;
+			}
 		};
+	else if spriteReactions[situation.num][situation.st] == nil then
+		spriteReactions[situation.num][situation.st] = {
+			[situation.y] = newReact;
+		}
+	else if spriteReactions[situation.num][situation.st][situation.y] == nil then
+		spriteReactions[situation.num][situation.st][situation.y] = newReact;
 	else
-		local index = spriteReactions[situation].index;
+		local index = spriteReactions[situation.num][situation.st][situation.y].index;
 
 		if index < #variations then
 			index = index + 1;
-			spriteReactions[situation].action = variations[index];
-			spriteReactions[situation].index = index;
+			spriteReactions[situation.num][situation.st][situation.y].action = variations[index];
+			spriteReactions[situation.num][situation.st][situation.y].index = index;
 		else
 			print("you shall not pass!");
 		end
+	end
+	end
 	end
 
 	-- save new values in the base
 	-- TODO find a way to get this path dynamically
 	-- linux
-	-- saveFile("/home/daniloluca/Documents/mario-ia/src/rsprite.lua", spriteReactions);
+	saveFile("/home/daniloluca/Documents/mario-ia/src/rsprite.lua", spriteReactions);
 	-- windows
-	saveFile("C:/Users/dsme/Documents/my_documents/mario-ia/src/rsprite.lua", spriteReactions);
+	-- saveFile("C:/Users/dsme/Documents/my_documents/mario-ia/src/rsprite.lua", spriteReactions);
 
 	-- reload level
 	savestate.load(savestate.create(1));
@@ -271,13 +311,29 @@ local function playerBlock()
 
 end
 
-local function playerAction()
-	joypad.set(1, {Y=true});
-	joypad.set(1, {right=true});
+-- player stuck validate
+local stuckCount = 0;
+local stuckDelay = 100;
+local player_last_x = s16(player.x);
 
+function frameCount()
+	stuckCount = stuckCount + 1;
+	
+	if stuckCount >= stuckDelay then
+		if s16(player.x) <= player_last_x then
+			playerDeath(generateSituation(getClosestSprites()));
+		else
+			player_last_x = s16(player.x);
+		end
+
+		stuckCount = 0;
+	end
+end
+
+local function playerAction()
 	-- block action
 	for i=1, #blocks, 1 do
-		if (blocks[i].y - s16(player.y)) > player.reaction.y and math.abs(blocks[i].x - s16(player.x)) < player.reaction.x then
+		if (blocks[i].y - s16(player.y)) > 0 and math.abs(blocks[i].x - s16(player.x)) < player.reaction.x then -- FIXME '0' of the first condition need to be fix
 			if blockReactions[blocks[i].num] ~= nil then
 				joypad.set(blockReactions[blocks[i].num]);
 			end
@@ -288,23 +344,29 @@ local function playerAction()
 	if u8(player.blocked_status) == 5 then
 		joypad.set(1, {Y=true, right=true, A=true});
 	end
-
+	
 	-- sprite action
-	for i=1, #sprites, 1 do
-		local sprite = sprites[i];
+	local situation = generateSituation(getClosestSprites());
 
-		if math.abs(sprite.x - s16(player.x)) < player.reaction.x then
-			local situation = generateSituationID(sprite.num, sprite.st, sprite.y);
-			
-			if spriteReactions[situation] ~= nil then
-				joypad.set(spriteReactions[situation].action);
+	if spriteReactions[situation.num] ~= nil then
+		if spriteReactions[situation.num][situation.st] ~= nil then
+			if spriteReactions[situation.num][situation.st][situation.y] ~= nil then
+				joypad.set(spriteReactions[situation.num][situation.st][situation.y].action);
 			end
 		end
 	end
 
 	-- player die
 	if u8(player.animation_trigger) ~= 0 then
-		playerDeath();
+		playerDeath(situation);
+	end
+
+	-- player stuck
+	if u8(player.speed) <= 6 then
+		frameCount();
+	else
+		stuckCount = 0;
+		player_last_x = s16(player.x);
 	end
 end
 
@@ -321,6 +383,7 @@ while true do
 	getBlocks();
 	playerAction();
 	console();
+	drawFieldOfView();
 
 	emu.frameadvance();-- important
 end

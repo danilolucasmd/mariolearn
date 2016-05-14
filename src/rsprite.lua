@@ -1,1 +1,1 @@
-{['51016']={action={A=false, right=true, Y=false, B=false}, index=1}, ['187']={action={A=false, right=true, Y=false, B=false}, index=1}, ['145816']={action={A=false, right=false, Y=false, B=true}, index=2}}
+{}
