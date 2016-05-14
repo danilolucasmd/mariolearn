@@ -1,5 +1,4 @@
 # Custom
-/db.lua
 *.lua~
 
 # Compiled Lua sources
