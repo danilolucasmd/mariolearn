@@ -1,1 +1,1 @@
-{}
+{['']={['']={['']={action={A=false, right=true, Y=false, B=false}, index=1}}}, ['6969696969']={['00000']={['352352352352352']={action={A=false, right=true, Y=false, B=false}, index=1}}}, ['56969696969']={['900000']={['368352352352352352']={action={A=false, right=true, Y=false, B=false}, index=1}}}}

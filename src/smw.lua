@@ -219,6 +219,7 @@ local function getBlocks()
 				local b = {
 					x = game_x,
 					y = game_y,
+					st = 0,
 					num = tile
 				};
 
@@ -258,6 +259,12 @@ local function getClosestSprites()
 	for i=1, #sprites, 1 do
 		if math.abs(s16(player.x) - sprites[i].x) <= player.reaction.x and math.abs(s16(player.y) - sprites[i].y) <= player.reaction.y then
 			table.insert(cs, sprites[i]);
+		end
+	end
+
+	for i=1, #blocks, 1 do
+		if block.solid[i] ~= nil and math.abs(s16(player.x) - blocks[i].x) <= player.reaction.x and math.abs(s16(player.y) - blocks[i].y) <= player.reaction.y then
+			table.insert(cs, blocks[i]);
 		end
 	end
 
@@ -331,19 +338,19 @@ function frameCount()
 end
 
 local function playerAction()
-	-- block action
-	for i=1, #blocks, 1 do
-		if (blocks[i].y - s16(player.y)) > 0 and math.abs(blocks[i].x - s16(player.x)) < player.reaction.x then -- FIXME '0' of the first condition need to be fix
-			if blockReactions[blocks[i].num] ~= nil then
-				joypad.set(blockReactions[blocks[i].num]);
-			end
-		end
-	end
+	-- -- block action
+	-- for i=1, #blocks, 1 do
+	-- 	if (blocks[i].y - s16(player.y)) > 0 and math.abs(blocks[i].x - s16(player.x)) < player.reaction.x then -- FIXME '0' of the first condition need to be fix
+	-- 		if blockReactions[blocks[i].num] ~= nil then
+	-- 			joypad.set(blockReactions[blocks[i].num]);
+	-- 		end
+	-- 	end
+	-- end
 
-	-- FIXME
-	if u8(player.blocked_status) == 5 then
-		joypad.set(1, {Y=true, right=true, A=true});
-	end
+	-- -- FIXME
+	-- if u8(player.blocked_status) == 5 then
+	-- 	joypad.set(1, {Y=true, right=true, A=true});
+	-- end
 	
 	-- sprite action
 	local situation = generateSituation(getClosestSprites());
