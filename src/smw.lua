@@ -306,7 +306,7 @@ local function playerDeath(situation)
 	-- save new values in the base
 	-- TODO find a way to get this path dynamically
 	-- linux
-	saveFile("/home/daniloluca/Documents/mario-ia/src/rsprite.lua", spriteReactions);
+	saveFile("/home/daniloluca/Documents/mario-ia/src/db.lua", spriteReactions);
 	-- windows
 	-- saveFile("C:/Users/dsme/Documents/my_documents/mario-ia/src/rsprite.lua", spriteReactions);
 
@@ -379,10 +379,10 @@ end
 
 -- start
 -- loading sprite reactions from file.
-local rsprite_file = loadFile("rsprite.lua"); -- ok
-local rblock_file = loadFile("rblock.lua"); -- nok
-spriteReactions = loadstring("return ".. rsprite_file)();
-blockReactions = loadstring("return ".. rblock_file)();
+local data_base_file = loadFile("db.lua"); -- ok
+--local rblock_file = loadFile("rblock.lua"); -- nok
+spriteReactions = loadstring("return ".. data_base_file)();
+--blockReactions = loadstring("return ".. rblock_file)();
 
 -- update
 while true do
