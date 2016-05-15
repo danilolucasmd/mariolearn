@@ -41,6 +41,7 @@ Algoritmo de Inteligência Artificial para "resolver / passar" fases de jogos de
 #### Ferramentas ####
 ##### Ram Map Super Mario World #####
 * http://www.smwcentral.net/?p=map&type=ram
+* http://www.smwcentral.net/?p=nmap&m=smwram
 
 ##### Lua TAS Scripting #####
 * http://www.fceux.com/web/help/fceux.html?LuaFunctionsList.html
