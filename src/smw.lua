@@ -12,7 +12,7 @@ local player = {
 	on_ground = 0x13ef,
 	reaction = {
 		x = 55,
-		y = 30,
+		y = 55,
 	},
 	blocked_status = 0x0077,
 };
@@ -49,14 +49,10 @@ local camera = {
 	camera_scroll_timer = 0x1401,
 }
 
-local spriteReactions = {};
-local sprites = {};
-
-local blockReactions = {};
-local blocks = {};
-
+-- actions will be used to generate the variations in the future.
 local actions = {"Y", "B", "right", "left"};
 local variations = {};
+local reactions = {};
 
 -- calculation actions.
 -- TODO change it to a recursive function
@@ -68,9 +64,6 @@ for i=1, 16, 1 do
     	right = (math.floor(i%2) == 1)
     }
 end
-
--- get the fucking savestate #1
--- local save_state = savestate.create(1);
 
 -- functions
 -- file IO functions
@@ -103,6 +96,11 @@ local function removeFile(filename)
 	os.remove(filename);
 end
 
+local function reload(save_num)
+	local save_state = savestate.create(save_num);
+	savestate.load(save_state);
+end
+
 local function signed(num, bits)
     local maxval = 2^(bits - 1);
 
@@ -114,11 +112,6 @@ local function signed(num, bits)
 end
 
 local function console()
-	local count = 50;
-	for i=1, #sprites, 1 do
-		gui.text(110, count, "sprite: " .. tostring(sprites[i]));
-		count = count + 10;
-	end
 	gui.text(10, 200, "X: " .. s16(player.x));
 	gui.text(10, 210, "Y: " .. s16(player.y));
 	gui.text(50, 210, "Speed: " .. u8(player.speed));
@@ -166,26 +159,28 @@ local function debugger(game_x, game_y, text)
 end
 
 local function getSprites()
-	sprites = {};
+	local sprites = {};
 
 	for i=0, 12, 1 do
-		local e = {
+		local s = {
 			x = 256*u8(sprite.x_high + i) + u8(sprite.x_low + i),
 			y = 256*u8(sprite.y_high + i) + u8(sprite.y_low + i),
 			num = u8(sprite.number + i),
 			st = u8(sprite.status + i)
 		};
 
-		e.x = signed(e.x, 16);
-    	e.y = signed(e.y, 16);
+		s.x = signed(s.x, 16);
+    	s.y = signed(s.y, 16);
 
-    	local screen_x, screen_y = screenCoordinates(e.x, e.y, s16(camera.x), s16(camera.y));
+    	local screen_x, screen_y = screenCoordinates(s.x, s.y, s16(camera.x), s16(camera.y));
 
-		if e.st ~= 0 then
-			table.insert(sprites, e);
-			drawSprite(screen_x, screen_y, "red", e.num, e.st);
+		if s.st ~= 0 then
+			table.insert(sprites, s);
+			drawSprite(screen_x, screen_y, "red", s.num, s.st);
 		end
 	end
+
+	return sprites;
 end
 
 local function getTile(map16_x, map16_y)
@@ -197,6 +192,8 @@ local function getTile(map16_x, map16_y)
 end
 
 local function getBlocks()
+	local blocks = {};
+
 	-- size = 6*16
 	local size = 160;
 
@@ -227,6 +224,8 @@ local function getBlocks()
 			end
 		end
 	end
+
+	return blocks;
 end
 
 -- situation model
@@ -247,14 +246,17 @@ local function generateSituation(elements)
 	for i=1, #elements, 1 do
 		s.num = s.num .. tostring(elements[i].num);
 		s.st = s.st .. tostring(elements[i].st);
-		s.y = s.y .. tostring(elements[i].y);
+		s.y = s.y .. tostring(math.abs(elements[i].y - s16(player.y)));
 	end
 
    	return s;
 end
 
-local function getClosestSprites()
+local function getClosestElements()
 	local cs = {};
+
+	local sprites = getSprites();
+	local blocks = getBlocks();
 
 	for i=1, #sprites, 1 do
 		if math.abs(s16(player.x) - sprites[i].x) <= player.reaction.x and math.abs(s16(player.y) - sprites[i].y) <= player.reaction.y then
@@ -263,7 +265,7 @@ local function getClosestSprites()
 	end
 
 	for i=1, #blocks, 1 do
-		if block.solid[i] ~= nil and math.abs(s16(player.x) - blocks[i].x) <= player.reaction.x and math.abs(s16(player.y) - blocks[i].y) <= player.reaction.y then
+		if block.solid[blocks[i].num] ~= nil and math.abs(s16(player.x) - blocks[i].x) <= player.reaction.x and math.abs(s16(player.y) - blocks[i].y) <= player.reaction.y then
 			table.insert(cs, blocks[i]);
 		end
 	end
@@ -272,30 +274,31 @@ local function getClosestSprites()
 end
 
 local function playerDeath(situation)
+	print(situation);
 	local newReact = {
 		action = variations[1],
 		index = 1
 	};
 
-	if spriteReactions[situation.num] == nil then
-		spriteReactions[situation.num] = {
+	if reactions[situation.num] == nil then
+		reactions[situation.num] = {
 			[situation.st] = {
 				[situation.y] = newReact;
 			}
 		};
-	else if spriteReactions[situation.num][situation.st] == nil then
-		spriteReactions[situation.num][situation.st] = {
+	else if reactions[situation.num][situation.st] == nil then
+		reactions[situation.num][situation.st] = {
 			[situation.y] = newReact;
 		}
-	else if spriteReactions[situation.num][situation.st][situation.y] == nil then
-		spriteReactions[situation.num][situation.st][situation.y] = newReact;
+	else if reactions[situation.num][situation.st][situation.y] == nil then
+		reactions[situation.num][situation.st][situation.y] = newReact;
 	else
-		local index = spriteReactions[situation.num][situation.st][situation.y].index;
+		local index = reactions[situation.num][situation.st][situation.y].index;
 
 		if index < #variations then
 			index = index + 1;
-			spriteReactions[situation.num][situation.st][situation.y].action = variations[index];
-			spriteReactions[situation.num][situation.st][situation.y].index = index;
+			reactions[situation.num][situation.st][situation.y].action = variations[index];
+			reactions[situation.num][situation.st][situation.y].index = index;
 		else
 			print("you shall not pass!");
 		end
@@ -306,19 +309,14 @@ local function playerDeath(situation)
 	-- save new values in the base
 	-- TODO find a way to get this path dynamically
 	-- linux
-	saveFile("/home/daniloluca/Documents/mario-ia/src/db.lua", spriteReactions);
+	saveFile("/home/daniloluca/Documents/mario-ia/src/db.lua", reactions);
 	-- windows
-	-- saveFile("C:/Users/dsme/Documents/my_documents/mario-ia/src/rsprite.lua", spriteReactions);
+	-- saveFile("C:/Users/dsme/Documents/my_documents/mario-ia/src/rsprite.lua", reactions);
 
-	-- reload level
-	savestate.load(savestate.create(1));
+	reload(4);
 end
 
-local function playerBlock()
-
-end
-
--- player stuck validate
+-- player stuck validation
 local stuckCount = 0;
 local stuckDelay = 100;
 local player_last_x = s16(player.x);
@@ -328,7 +326,7 @@ function frameCount()
 	
 	if stuckCount >= stuckDelay then
 		if s16(player.x) <= player_last_x then
-			playerDeath(generateSituation(getClosestSprites()));
+			playerDeath(generateSituation(getClosestElements()));
 		else
 			player_last_x = s16(player.x);
 		end
@@ -337,34 +335,21 @@ function frameCount()
 	end
 end
 
+-- such a main function.
 local function playerAction()
-	-- -- block action
-	-- for i=1, #blocks, 1 do
-	-- 	if (blocks[i].y - s16(player.y)) > 0 and math.abs(blocks[i].x - s16(player.x)) < player.reaction.x then -- FIXME '0' of the first condition need to be fix
-	-- 		if blockReactions[blocks[i].num] ~= nil then
-	-- 			joypad.set(blockReactions[blocks[i].num]);
-	-- 		end
-	-- 	end
-	-- end
+	-- reaction exec
+	local situation = generateSituation(getClosestElements());
 
-	-- -- FIXME
-	-- if u8(player.blocked_status) == 5 then
-	-- 	joypad.set(1, {Y=true, right=true, A=true});
-	-- end
-	
-	-- sprite action
-	local situation = generateSituation(getClosestSprites());
-
-	if spriteReactions[situation.num] ~= nil then
-		if spriteReactions[situation.num][situation.st] ~= nil then
-			if spriteReactions[situation.num][situation.st][situation.y] ~= nil then
-				joypad.set(spriteReactions[situation.num][situation.st][situation.y].action);
+	if reactions[situation.num] ~= nil then
+		if reactions[situation.num][situation.st] ~= nil then
+			if reactions[situation.num][situation.st][situation.y] ~= nil then
+				joypad.set(reactions[situation.num][situation.st][situation.y].action);
 			end
 		end
 	end
 
 	-- player die
-	if u8(player.animation_trigger) ~= 0 then
+	if u8(player.animation_trigger) == 9 then
 		playerDeath(situation);
 	end
 
@@ -378,16 +363,12 @@ local function playerAction()
 end
 
 -- start
--- loading sprite reactions from file.
-local data_base_file = loadFile("db.lua"); -- ok
---local rblock_file = loadFile("rblock.lua"); -- nok
-spriteReactions = loadstring("return ".. data_base_file)();
---blockReactions = loadstring("return ".. rblock_file)();
+-- loading reactions from file.
+local data_base_file = loadFile("db.lua");
+reactions = loadstring("return ".. data_base_file)();
 
 -- update
 while true do
-	getSprites();
-	getBlocks();
 	playerAction();
 	console();
 	drawFieldOfView();
