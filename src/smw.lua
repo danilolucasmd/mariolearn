@@ -28,6 +28,16 @@ local sprite = {
   	y_offscreen = 0x186c,
 }
 
+local extended_sprite = {
+	number = 0x170b,
+    x_high = 0x1733,
+    x_low = 0x171f,
+    y_high = 0x1729,
+    y_low = 0x1715,
+    x_speed = 0x1747,
+    y_speed = 0x173d,
+}
+
 function Set (list)
 	local set = {}
 	for _, l in ipairs(list) do set[l] = true end
@@ -131,6 +141,13 @@ local function drawSprite(screen_x, screen_y, color, num, st)
 	gui.text(screen_x+16, screen_y, st);
 end
 
+local function drawExtendedSprite(screen_x, screen_y, color, num, st)
+	gui.line(screen_x+5, screen_y+5, screen_x+15, screen_y+5, color);
+	gui.line(screen_x+10, screen_y, screen_x+10, screen_y+10, color);
+	gui.text(screen_x, screen_y, num);
+	gui.text(screen_x+16, screen_y, st);
+end
+
 local function drawBlock(screen_x, screen_y, width, height, color)
 	gui.line(screen_x, screen_y, screen_x+width, screen_y, color);
 	gui.line(screen_x, screen_y+height, screen_x+width, screen_y+height, color);
@@ -181,6 +198,31 @@ local function getSprites()
 	end
 
 	return sprites;
+end
+
+local function getExtendedSprites()
+	local extended = {};
+
+	for i=0, 11, 1 do
+		local e = {
+			x = 256*u8(extended_sprite.x_high + i) + u8(extended_sprite.x_low + i),
+			y = 256*u8(extended_sprite.y_high + i) + u8(extended_sprite.y_low + i),
+			num = u8(extended_sprite.number + i),
+			st = 0
+		}
+
+		e.x = signed(e.x, 16);
+    	e.y = signed(e.y, 16);
+
+    	local screen_x, screen_y = screenCoordinates(e.x, e.y, s16(camera.x), s16(camera.y));
+
+		if e.num ~= 0 then
+			table.insert(extended, e);
+			drawExtendedSprite(screen_x, screen_y, "blue", e.num, e.st);
+		end
+	end
+
+	return extended;
 end
 
 local function getTile(map16_x, map16_y)
@@ -257,6 +299,7 @@ local function getClosestElements()
 
 	local sprites = getSprites();
 	local blocks = getBlocks();
+	local extended = getExtendedSprites();
 
 	for i=1, #sprites, 1 do
 		if math.abs(s16(player.x) - sprites[i].x) <= player.reaction.x and math.abs(s16(player.y) - sprites[i].y) <= player.reaction.y then
@@ -267,6 +310,12 @@ local function getClosestElements()
 	for i=1, #blocks, 1 do
 		if block.solid[blocks[i].num] ~= nil and math.abs(s16(player.x) - blocks[i].x) <= player.reaction.x and math.abs(s16(player.y) - blocks[i].y) <= player.reaction.y then
 			table.insert(cs, blocks[i]);
+		end
+	end
+
+	for i=1, #extended, 1 do
+		if math.abs(s16(player.x) - extended[i].x) <= player.reaction.x and math.abs(s16(player.y) - extended[i].y) <= player.reaction.y then
+			table.insert(cs, extended[i]);
 		end
 	end
 
