@@ -106,6 +106,15 @@ local function removeFile(filename)
 	os.remove(filename);
 end
 
+local function getFilePath(filename)
+	local info = debug.getinfo(1, "S");
+	local path = info.source:sub(2);
+
+	path = path:gsub("smw.lua", filename);
+	
+	return path;
+end
+
 local function reload(save_num)
 	local save_state = savestate.create(save_num);
 	savestate.load(save_state);
@@ -356,13 +365,9 @@ local function playerDeath(situation)
 	end
 
 	-- save new values in the base
-	-- TODO find a way to get this path dynamically
-	-- linux
-	saveFile("/home/daniloluca/Documents/mario-ia/src/db.lua", reactions);
-	-- windows
-	-- saveFile("C:/Users/dsme/Documents/my_documents/mario-ia/src/rsprite.lua", reactions);
+	saveFile(getFilePath("db.lua"), reactions);
 
-	reload(4);
+	reload(1);
 end
 
 -- player stuck validation
