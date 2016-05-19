@@ -59,23 +59,26 @@ local camera = {
 	camera_scroll_timer = 0x1401,
 }
 
--- actions will be used to generate the variations in the future.
-local actions = {"Y", "B", "right", "left"};
+local commands = {
+	Y = [false, true],
+	A = [false, true], -- A = [false, true, "hold"],
+	B = [false, true], -- B = [false, true, "hold"],
+	right = [false, true]
+}
+
 local variations = {};
 local reactions = {};
 
--- calculation actions.
--- TODO change it to a recursive function
-for i=1, 16, 1 do
-    variations[i] = {
-    	A = (math.floor(i/8%2) == 1),
-    	Y = (math.floor(i/4%2) == 1),
-    	B = (math.floor(i/2%2) == 1),
-    	right = (math.floor(i%2) == 1)
-    }
+-- functions
+local function generateVariations()
+	local comb = {};
+	for key, val in pairs(commands) do
+		for i=1, #val, 1 do
+			-- TODO
+		end
+	end	
 end
 
--- functions
 -- file IO functions
 local function saveFile(filename, obj)
 	local file = io.open(filename, "w");
@@ -420,6 +423,7 @@ end
 -- loading reactions from file.
 local data_base_file = loadFile("db.lua");
 reactions = loadstring("return ".. data_base_file)();
+variations = generateVariations();
 
 -- update
 while true do
