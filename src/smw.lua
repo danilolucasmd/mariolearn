@@ -60,23 +60,37 @@ local camera = {
 }
 
 local commands = {
-	Y = [false, true],
-	A = [false, true], -- A = [false, true, "hold"],
-	B = [false, true], -- B = [false, true, "hold"],
-	right = [false, true]
+	Y = {false, true},
+	A = {false, true}, -- A = [false, true, "hold"],
+	B = {false, true}, -- B = [false, true, "hold"],
+	right = {false, true}
 }
 
 local variations = {};
 local reactions = {};
 
 -- functions
-local function generateVariations()
-	local comb = {};
-	for key, val in pairs(commands) do
-		for i=1, #val, 1 do
-			-- TODO
+-- function to turn a reference variable in a new variable.
+local function new(var)
+	local new_var = {};
+	for k, v in pairs(var) do
+		new_var[k] = v; -- or new_var[k] = var[k]
+	end
+
+	return new_var;
+end
+
+local function generateVariations(action, key)
+	local k, v = next(commands, key);
+
+	for i=1, #v, 1 do
+		action[k] = v[i];
+		if next(commands, k) ~= nil then
+			generateVariations(action, k);
+		else
+			table.insert(variations, new(action));
 		end
-	end	
+	end
 end
 
 -- file IO functions
@@ -335,7 +349,6 @@ local function getClosestElements()
 end
 
 local function playerDeath(situation)
-	print(situation);
 	local newReact = {
 		action = variations[1],
 		index = 1
@@ -423,7 +436,7 @@ end
 -- loading reactions from file.
 local data_base_file = loadFile("db.lua");
 reactions = loadstring("return ".. data_base_file)();
-variations = generateVariations();
+generateVariations({}, nil);
 
 -- update
 while true do
