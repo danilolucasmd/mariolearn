@@ -11,8 +11,8 @@ local player = {
 	on_air = 0x0072,
 	on_ground = 0x13ef,
 	reaction = {
-		x = 55,
-		y = 55,
+		x = 30,
+		y = 30,
 	},
 	blocked_status = 0x0077,
 };
@@ -60,10 +60,10 @@ local camera = {
 }
 
 local commands = {
-	Y = {false, true},
-	A = {false, true}, -- A = [false, true, "hold"],
-	B = {false, true}, -- B = [false, true, "hold"],
-	right = {false, true}
+	{button = "A", states = {false, true}},
+	{button = "Y", states = {false, true}},
+	{button = "B", states = {false, true}},
+	{button = "right", states = {false, true}},
 }
 
 local variations = {};
@@ -80,13 +80,12 @@ local function new(var)
 	return new_var;
 end
 
-local function generateVariations(action, key)
-	local k, v = next(commands, key);
-
-	for i=1, #v, 1 do
-		action[k] = v[i];
-		if next(commands, k) ~= nil then
-			generateVariations(action, k);
+local function generateVariations(action, index)
+	local command = commands[index];
+	for i=1, #command.states, 1 do
+		action[command.button] = command.states[i];
+		if index < #commands then
+			generateVariations(action, index+1);
 		else
 			table.insert(variations, new(action));
 		end
@@ -380,6 +379,8 @@ local function playerDeath(situation)
 	end
 	end
 
+	print(situation, reactions[situation.num][situation.st][situation.y].action);
+
 	-- save new values in the base
 	saveFile(getFilePath("db.lua"), reactions);
 
@@ -436,7 +437,7 @@ end
 -- loading reactions from file.
 local data_base_file = loadFile("db.lua");
 reactions = loadstring("return ".. data_base_file)();
-generateVariations({}, nil);
+generateVariations({}, 1);
 
 -- update
 while true do
