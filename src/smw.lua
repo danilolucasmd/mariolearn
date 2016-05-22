@@ -63,7 +63,7 @@ local commands = {
 	{button = "A", states = {false, true}},
 	{button = "Y", states = {false, true}},
 	{button = "B", states = {false, true}},
-	{button = "right", states = {false, true}},
+	{button = "right", states = {true, false}},
 }
 
 local variations = {};
@@ -87,7 +87,11 @@ local function generateVariations(action, index)
 		if index < #commands then
 			generateVariations(action, index+1);
 		else
-			table.insert(variations, new(action));
+			local variation = {
+				action = new(action),
+				weight = 1,
+			};
+			table.insert(variations, variation);
 		end
 	end
 end
@@ -349,7 +353,7 @@ end
 
 local function playerDeath(situation)
 	local newReact = {
-		action = variations[1],
+		action = variations[1].action,
 		index = 1
 	};
 
@@ -370,7 +374,7 @@ local function playerDeath(situation)
 
 		if index < #variations then
 			index = index + 1;
-			reactions[situation.num][situation.st][situation.y].action = variations[index];
+			reactions[situation.num][situation.st][situation.y].action = variations[index].action;
 			reactions[situation.num][situation.st][situation.y].index = index;
 		else
 			print("you shall not pass!");
@@ -415,8 +419,14 @@ local function playerAction()
 		if reactions[situation.num][situation.st] ~= nil then
 			if reactions[situation.num][situation.st][situation.y] ~= nil then
 				joypad.set(reactions[situation.num][situation.st][situation.y].action);
+			else
+				joypad.set(variations[1].action);
 			end
+		else
+			joypad.set(variations[1].action);
 		end
+	else
+		joypad.set(variations[1].action);
 	end
 
 	-- player die
