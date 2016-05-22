@@ -71,7 +71,7 @@ local reactions = {};
 
 -- functions
 -- function to turn a reference variable in a new variable.
-local function new(var)
+function new(var)
 	local new_var = {};
 	for k, v in pairs(var) do
 		new_var[k] = v; -- or new_var[k] = var[k]
@@ -80,7 +80,7 @@ local function new(var)
 	return new_var;
 end
 
-local function generateVariations(action, index)
+function generateVariations(action, index)
 	local command = commands[index];
 	for i=1, #command.states, 1 do
 		action[command.button] = command.states[i];
@@ -97,14 +97,14 @@ local function generateVariations(action, index)
 end
 
 -- file IO functions
-local function saveFile(filename, obj)
+function saveFile(filename, obj)
 	local file = io.open(filename, "w");
 	file:write(tostring(obj));
 	file:flush();
 	file:close();
 end
 
-local function loadFile(filename)
+function loadFile(filename)
 	local file = io.open(filename, "r");
 	if file == nil then
 		saveFile(filename, {});
@@ -115,18 +115,18 @@ local function loadFile(filename)
 	return response;
 end
 
-local function cleanFile(filename)
+function cleanFile(filename)
 	local file = io.open(filename, "w");
 	file:write("");
 	file:flush();
 	file:close();
 end
 
-local function removeFile(filename)
+function removeFile(filename)
 	os.remove(filename);
 end
 
-local function getFilePath(filename)
+function getFilePath(filename)
 	local info = debug.getinfo(1, "S");
 	local path = info.source:sub(2);
 
@@ -135,12 +135,12 @@ local function getFilePath(filename)
 	return path;
 end
 
-local function reload(save_num)
+function reload(save_num)
 	local save_state = savestate.create(save_num);
 	savestate.load(save_state);
 end
 
-local function signed(num, bits)
+function signed(num, bits)
     local maxval = 2^(bits - 1);
 
     if num < maxval then
@@ -150,34 +150,34 @@ local function signed(num, bits)
     end
 end
 
-local function console()
+function console()
 	gui.text(10, 200, "X: " .. s16(player.x));
 	gui.text(10, 210, "Y: " .. s16(player.y));
 	gui.text(50, 210, "Speed: " .. u8(player.speed));
 end
 
-local function screenCoordinates(x, y, camera_x, camera_y)
+function screenCoordinates(x, y, camera_x, camera_y)
     local x_screen = (x - camera_x);
     local y_screen = (y - camera_y) - 1;
 
     return x_screen, y_screen;
 end
 
-local function drawSprite(screen_x, screen_y, color, num, st)
+function drawSprite(screen_x, screen_y, color, num, st)
 	gui.line(screen_x+5, screen_y+5, screen_x+15, screen_y+5, color);
 	gui.line(screen_x+10, screen_y, screen_x+10, screen_y+10, color);
 	gui.text(screen_x, screen_y, num);
 	gui.text(screen_x+16, screen_y, st);
 end
 
-local function drawExtendedSprite(screen_x, screen_y, color, num, st)
+function drawExtendedSprite(screen_x, screen_y, color, num, st)
 	gui.line(screen_x+5, screen_y+5, screen_x+15, screen_y+5, color);
 	gui.line(screen_x+10, screen_y, screen_x+10, screen_y+10, color);
 	gui.text(screen_x, screen_y, num);
 	gui.text(screen_x+16, screen_y, st);
 end
 
-local function drawBlock(screen_x, screen_y, width, height, color)
+function drawBlock(screen_x, screen_y, width, height, color)
 	gui.line(screen_x, screen_y, screen_x+width, screen_y, color);
 	gui.line(screen_x, screen_y+height, screen_x+width, screen_y+height, color);
 
@@ -185,7 +185,7 @@ local function drawBlock(screen_x, screen_y, width, height, color)
 	gui.line(screen_x+width, screen_y, screen_x+width, screen_y+height, color);
 end
 
-local function drawFieldOfView()
+function drawFieldOfView()
 	local x_screen, y_screen = screenCoordinates(s16(player.x), s16(player.y)+15, s16(camera.x), s16(camera.y));
 
 	x_screen = x_screen - player.reaction.x;
@@ -198,13 +198,13 @@ local function drawFieldOfView()
 end
 
 -- debug by game position
-local function debugger(game_x, game_y, text)
+function debugger(game_x, game_y, text)
 	local screen_x, screen_y = screenCoordinates(game_x, game_y, s16(camera.x), s16(camera.y));
-	drawBlock(screen_x, screen_y, "purple");
+	drawBlock(screen_x, screen_y, 15, 15, "purple");
 	gui.text(screen_x+3, screen_y+5, text);
 end
 
-local function getSprites()
+function getSprites()
 	local sprites = {};
 
 	for i=0, 12, 1 do
@@ -229,7 +229,7 @@ local function getSprites()
 	return sprites;
 end
 
-local function getExtendedSprites()
+function getExtendedSprites()
 	local extended = {};
 
 	for i=0, 11, 1 do
@@ -254,7 +254,7 @@ local function getExtendedSprites()
 	return extended;
 end
 
-local function getTile(map16_x, map16_y)
+function getTile(map16_x, map16_y)
 	local game_x = math.floor((s16(player.x)+map16_x+8)/16);
 	local game_y = math.floor((s16(player.y)+map16_y)/16);
 	local id = math.floor(game_x/0x10)*0x1B0 + game_y*0x10 + game_x%0x10;
@@ -262,7 +262,7 @@ local function getTile(map16_x, map16_y)
 	return game_x*16, game_y*16, u8(0x7EC800 + id);
 end
 
-local function getBlocks()
+function getBlocks()
 	local blocks = {};
 
 	-- size = 6*16
@@ -307,7 +307,7 @@ end
 			-- action
 			-- index
 ------------------------------
-local function generateSituation(elements)
+function generateSituation(elements)
 	local s = {
 		num = "",
 		st = "",
@@ -323,7 +323,7 @@ local function generateSituation(elements)
    	return s;
 end
 
-local function getClosestElements()
+function getClosestElements()
 	local cs = {};
 
 	local sprites = getSprites();
@@ -351,7 +351,7 @@ local function getClosestElements()
 	return cs;
 end
 
-local function playerDeath(situation)
+function playerDeath(situation)
 	local newReact = {
 		action = variations[1].action,
 		index = 1
@@ -411,7 +411,7 @@ function frameCount()
 end
 
 -- such a main function.
-local function playerAction()
+function playerAction()
 	-- reaction exec
 	local situation = generateSituation(getClosestElements());
 
@@ -435,7 +435,7 @@ local function playerAction()
 	end
 
 	-- player stuck
-	if u8(player.speed) <= 6 then
+	if u8(player.speed) <= 7 then
 		frameCount();
 	else
 		stuckCount = 0;
