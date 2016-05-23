@@ -186,15 +186,12 @@ function drawBlock(screen_x, screen_y, width, height, color)
 end
 
 function drawFieldOfView()
-	local x_screen, y_screen = screenCoordinates(s16(player.x), s16(player.y)+15, s16(camera.x), s16(camera.y));
+	local x_screen, y_screen = screenCoordinates(s16(player.x)+7, s16(player.y)+20, s16(camera.x), s16(camera.y));
 
-	x_screen = x_screen - player.reaction.x;
-	y_screen = y_screen - player.reaction.y;
-
-	local width = (player.reaction.x*2)+15;
-	local height = (player.reaction.y*2)+15;
-
-	drawBlock(x_screen, y_screen, width, height, "grey");
+	drawBlock(x_screen, y_screen, -player.reaction.x, -player.reaction.y, "blue");
+	drawBlock(x_screen, y_screen, player.reaction.x, -player.reaction.y, "blue");
+	drawBlock(x_screen, y_screen, -player.reaction.x, player.reaction.y, "blue");
+	drawBlock(x_screen, y_screen, player.reaction.x, player.reaction.y, "blue");
 end
 
 -- debug by game position
@@ -247,7 +244,7 @@ function getExtendedSprites()
 
 		if e.num ~= 0 then
 			table.insert(extended, e);
-			drawExtendedSprite(screen_x, screen_y, "blue", e.num, e.st);
+			drawExtendedSprite(screen_x, screen_y, "red", e.num, e.st);
 		end
 	end
 
