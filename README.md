@@ -45,3 +45,6 @@ Algoritmo de Inteligência Artificial para "resolver / passar" fases de jogos de
 
 ##### Lua TAS Scripting #####
 * http://www.fceux.com/web/help/fceux.html?LuaFunctionsList.html
+
+#### Imagens ####
+![alt tag](http://www.webquest.hawaii.edu/kahihi/mathdictionary/images/quadrant.png)
