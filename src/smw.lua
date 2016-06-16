@@ -131,7 +131,7 @@ function getFilePath(filename)
 	local path = info.source:sub(2);
 
 	path = path:gsub("smw.lua", filename);
-	
+
 	return path;
 end
 
@@ -188,10 +188,29 @@ end
 function drawFieldOfView()
 	local x_screen, y_screen = screenCoordinates(s16(player.x)+7, s16(player.y)+20, s16(camera.x), s16(camera.y));
 
-	drawBlock(x_screen, y_screen, -player.reaction.x, -player.reaction.y, "blue");
 	drawBlock(x_screen, y_screen, player.reaction.x, -player.reaction.y, "blue");
+	drawBlock(x_screen, y_screen, -player.reaction.x, -player.reaction.y, "blue");
 	drawBlock(x_screen, y_screen, -player.reaction.x, player.reaction.y, "blue");
 	drawBlock(x_screen, y_screen, player.reaction.x, player.reaction.y, "blue");
+end
+
+-- highlight quadrant
+function hlQuadrant(quad)
+	local x_screen, y_screen = screenCoordinates(s16(player.x)+7, s16(player.y)+20, s16(camera.x), s16(camera.y));
+
+	gui.transparency(2);
+
+	if quad == 1 then
+		gui.box(x_screen, y_screen, x_screen+player.reaction.x, y_screen-player.reaction.y, "blue");
+	elseif quad == 2 then
+		gui.box(x_screen, y_screen, x_screen-player.reaction.x, y_screen-player.reaction.y, "blue");
+	elseif quad == 3 then
+		gui.box(x_screen, y_screen, x_screen-player.reaction.x, y_screen+player.reaction.y, "blue");
+	elseif quad == 4 then
+		gui.box(x_screen, y_screen, x_screen+player.reaction.x, y_screen+player.reaction.y, "blue");
+	end
+
+	gui.transparency(0);
 end
 
 -- debug by game position
@@ -300,21 +319,37 @@ end
 ------------------------------
 -- situation_number
 	-- situation_state
-		-- situation_position
+		-- situation_quadrant
 			-- action
 			-- index
 ------------------------------
+function getQuadrant(element_x, element_y)
+	if (s16(player.x) - element_x) <= 0 and (s16(player.y) - element_y) > 0 then
+		hlQuadrant(1);
+		return 1;
+	elseif (s16(player.x) - element_x) > 0 and (s16(player.y) - element_y) > 0 then
+		hlQuadrant(2);
+		return 2;
+	elseif (s16(player.x) - element_x) > 0 and (s16(player.y) - element_y) <= 0 then
+		hlQuadrant(3);
+		return 3;
+	elseif (s16(player.x) - element_x) <= 0 and (s16(player.y) - element_y) <= 0 then
+		hlQuadrant(4);
+		return 4;
+	end
+end
+
 function generateSituation(elements)
 	local s = {
 		num = "",
 		st = "",
-		y = ""
+		quad = ""
 	};
 
 	for i=1, #elements, 1 do
 		s.num = s.num .. tostring(elements[i].num);
 		s.st = s.st .. tostring(elements[i].st);
-		s.y = s.y .. tostring(math.abs(elements[i].y - s16(player.y)));
+		s.quad = s.quad .. tostring(getQuadrant(elements[i].x, elements[i].y));
 	end
 
    	return s;
@@ -357,30 +392,28 @@ function playerDeath(situation)
 	if reactions[situation.num] == nil then
 		reactions[situation.num] = {
 			[situation.st] = {
-				[situation.y] = newReact;
+				[situation.quad] = newReact;
 			}
 		};
-	else if reactions[situation.num][situation.st] == nil then
+	elseif reactions[situation.num][situation.st] == nil then
 		reactions[situation.num][situation.st] = {
-			[situation.y] = newReact;
+			[situation.quad] = newReact;
 		}
-	else if reactions[situation.num][situation.st][situation.y] == nil then
-		reactions[situation.num][situation.st][situation.y] = newReact;
+	elseif reactions[situation.num][situation.st][situation.quad] == nil then
+		reactions[situation.num][situation.st][situation.quad] = newReact;
 	else
-		local index = reactions[situation.num][situation.st][situation.y].index;
+		local index = reactions[situation.num][situation.st][situation.quad].index;
 
 		if index < #variations then
 			index = index + 1;
-			reactions[situation.num][situation.st][situation.y].action = variations[index].action;
-			reactions[situation.num][situation.st][situation.y].index = index;
+			reactions[situation.num][situation.st][situation.quad].action = variations[index].action;
+			reactions[situation.num][situation.st][situation.quad].index = index;
 		else
 			print("you shall not pass!");
 		end
 	end
-	end
-	end
 
-	print(situation, reactions[situation.num][situation.st][situation.y].action);
+	print(situation, reactions[situation.num][situation.st][situation.quad].action);
 
 	-- save new values in the base
 	saveFile(getFilePath("db.lua"), reactions);
@@ -395,7 +428,7 @@ local player_last_x = s16(player.x);
 
 function frameCount()
 	stuckCount = stuckCount + 1;
-	
+
 	if stuckCount >= stuckDelay then
 		if s16(player.x) <= player_last_x then
 			playerDeath(generateSituation(getClosestElements()));
@@ -414,8 +447,8 @@ function playerAction()
 
 	if reactions[situation.num] ~= nil then
 		if reactions[situation.num][situation.st] ~= nil then
-			if reactions[situation.num][situation.st][situation.y] ~= nil then
-				joypad.set(reactions[situation.num][situation.st][situation.y].action);
+			if reactions[situation.num][situation.st][situation.quad] ~= nil then
+				joypad.set(reactions[situation.num][situation.st][situation.quad].action);
 			else
 				joypad.set(variations[1].action);
 			end
