@@ -11,11 +11,18 @@ local player = {
 	on_air = 0x0072,
 	on_ground = 0x13ef,
 	reaction = {
-		x = 30,
-		y = 30,
+		x = 32,
+		y = 32,
 	},
 	blocked_status = 0x0077,
 };
+
+function getPlayer()
+	return {
+		x = s16(player.x)+8,
+		y = s16(player.y)+16
+	};
+end
 
 local sprite = {
 	number = 0x009e,
@@ -26,7 +33,7 @@ local sprite = {
 	y_low = 0x00d8,
 	x_offscreen = 0x15a0,
   	y_offscreen = 0x186c,
-}
+};
 
 local extended_sprite = {
 	number = 0x170b,
@@ -36,7 +43,7 @@ local extended_sprite = {
     y_low = 0x1715,
     x_speed = 0x1747,
     y_speed = 0x173d,
-}
+};
 
 function Set (list)
 	local set = {}
@@ -151,8 +158,8 @@ function signed(num, bits)
 end
 
 function console()
-	gui.text(10, 200, "X: " .. s16(player.x));
-	gui.text(10, 210, "Y: " .. s16(player.y));
+	gui.text(10, 200, "X: " .. getPlayer().x);
+	gui.text(10, 210, "Y: " .. getPlayer().y);
 	gui.text(50, 210, "Speed: " .. u8(player.speed));
 end
 
@@ -164,39 +171,41 @@ function screenCoordinates(x, y, camera_x, camera_y)
 end
 
 function drawSprite(screen_x, screen_y, color, num, st)
-	gui.line(screen_x+5, screen_y+5, screen_x+15, screen_y+5, color);
-	gui.line(screen_x+10, screen_y, screen_x+10, screen_y+10, color);
-	gui.text(screen_x, screen_y, num);
-	gui.text(screen_x+16, screen_y, st);
+	gui.line(screen_x-8, screen_y, screen_x+8, screen_y, color);
+	gui.line(screen_x, screen_y-8, screen_x, screen_y+8, color);
+	gui.text(screen_x-8, screen_y, num);
+	gui.text(screen_x+8, screen_y, st);
 end
 
 function drawExtendedSprite(screen_x, screen_y, color, num, st)
-	gui.line(screen_x+5, screen_y+5, screen_x+15, screen_y+5, color);
-	gui.line(screen_x+10, screen_y, screen_x+10, screen_y+10, color);
-	gui.text(screen_x, screen_y, num);
-	gui.text(screen_x+16, screen_y, st);
+	gui.line(screen_x-8, screen_y, screen_x+8, screen_y, color);
+	gui.line(screen_x, screen_y-8, screen_x, screen_y+8, color);
+	gui.text(screen_x-8, screen_y, num);
+	gui.text(screen_x+8, screen_y, st);
 end
 
 function drawBlock(screen_x, screen_y, width, height, color)
-	gui.line(screen_x, screen_y, screen_x+width, screen_y, color);
-	gui.line(screen_x, screen_y+height, screen_x+width, screen_y+height, color);
+	local x, y = screen_x-(width/2), screen_y-(width/2);
 
-	gui.line(screen_x, screen_y, screen_x, screen_y+height, color);
-	gui.line(screen_x+width, screen_y, screen_x+width, screen_y+height, color);
+	gui.line(x, y, x+width, y, color);
+	gui.line(x, y+height, x+width, y+height, color);
+
+	gui.line(x, y, x, y+height, color);
+	gui.line(x+width, y, x+width, y+height, color);
 end
 
 function drawFieldOfView()
-	local x_screen, y_screen = screenCoordinates(s16(player.x)+7, s16(player.y)+20, s16(camera.x), s16(camera.y));
+	local x_screen, y_screen = screenCoordinates(getPlayer().x, getPlayer().y, s16(camera.x), s16(camera.y));
 
-	drawBlock(x_screen, y_screen, player.reaction.x, -player.reaction.y, "blue");
-	drawBlock(x_screen, y_screen, -player.reaction.x, -player.reaction.y, "blue");
-	drawBlock(x_screen, y_screen, -player.reaction.x, player.reaction.y, "blue");
-	drawBlock(x_screen, y_screen, player.reaction.x, player.reaction.y, "blue");
+	gui.box(x_screen, y_screen, x_screen+player.reaction.x, y_screen-player.reaction.y, 0,"blue");
+	gui.box(x_screen, y_screen, x_screen-player.reaction.x, y_screen-player.reaction.y, 0,"blue");
+	gui.box(x_screen, y_screen, x_screen-player.reaction.x, y_screen+player.reaction.y, 0,"blue");
+	gui.box(x_screen, y_screen, x_screen+player.reaction.x, y_screen+player.reaction.y, 0,"blue");
 end
 
 -- highlight quadrant
 function hlQuadrant(quad)
-	local x_screen, y_screen = screenCoordinates(s16(player.x)+7, s16(player.y)+20, s16(camera.x), s16(camera.y));
+	local x_screen, y_screen = screenCoordinates(getPlayer().x, getPlayer().y, s16(camera.x), s16(camera.y));
 
 	gui.transparency(2);
 
@@ -231,8 +240,8 @@ function getSprites()
 			st = u8(sprite.status + i)
 		};
 
-		s.x = signed(s.x, 16);
-    	s.y = signed(s.y, 16);
+		s.x = signed(s.x, 16)+8;
+    	s.y = signed(s.y, 16)+8;
 
     	local screen_x, screen_y = screenCoordinates(s.x, s.y, s16(camera.x), s16(camera.y));
 
@@ -256,8 +265,8 @@ function getExtendedSprites()
 			st = 0
 		}
 
-		e.x = signed(e.x, 16);
-    	e.y = signed(e.y, 16);
+		e.x = signed(e.x, 16)+8;
+    	e.y = signed(e.y, 16)+8;
 
     	local screen_x, screen_y = screenCoordinates(e.x, e.y, s16(camera.x), s16(camera.y));
 
@@ -271,11 +280,11 @@ function getExtendedSprites()
 end
 
 function getTile(map16_x, map16_y)
-	local game_x = math.floor((s16(player.x)+map16_x+8)/16);
-	local game_y = math.floor((s16(player.y)+map16_y)/16);
+	local game_x = math.floor((getPlayer().x+map16_x+8)/16);
+	local game_y = math.floor((getPlayer().y+map16_y)/16);
 	local id = math.floor(game_x/0x10)*0x1B0 + game_y*0x10 + game_x%0x10;
 
-	return game_x*16, game_y*16, u8(0x7EC800 + id);
+	return (game_x*16)+8, (game_y*16)+8, u8(0x7EC800 + id);
 end
 
 function getBlocks()
@@ -293,12 +302,12 @@ function getBlocks()
 			-- Green ground
 			if block.semi[tile] then
 				local screen_x, screen_y = screenCoordinates(game_x, game_y, s16(camera.x), s16(camera.y));
-				drawBlock(screen_x, screen_y, 15, 15, "green");
+				drawBlock(screen_x, screen_y, 16, 16, "green");
 			end
 
 			if block.solid[tile] then
 				local screen_x, screen_y = screenCoordinates(game_x, game_y, s16(camera.x), s16(camera.y));
-				drawBlock(screen_x, screen_y, 15, 15, "red");
+				drawBlock(screen_x, screen_y, 16, 16, "red");
 
 				local b = {
 					x = game_x,
@@ -324,16 +333,20 @@ end
 			-- index
 ------------------------------
 function getQuadrant(element_x, element_y)
-	if (s16(player.x) - element_x) <= 0 and (s16(player.y) - element_y) > 0 then
+	-- debugger(element_x, element_y, element_y); -- cool
+
+	local player_x, player_y = getPlayer().x, getPlayer().y;
+
+	if (player_x - element_x) <= 0 and (player_y - element_y) > 0 then
 		hlQuadrant(1);
 		return 1;
-	elseif (s16(player.x) - element_x) > 0 and (s16(player.y) - element_y) > 0 then
+	elseif (player_x - element_x) > 0 and (player_y - element_y) > 0 then
 		hlQuadrant(2);
 		return 2;
-	elseif (s16(player.x) - element_x) > 0 and (s16(player.y) - element_y) <= 0 then
+	elseif (player_x - element_x) > 0 and (player_y - element_y) <= 0 then
 		hlQuadrant(3);
 		return 3;
-	elseif (s16(player.x) - element_x) <= 0 and (s16(player.y) - element_y) <= 0 then
+	elseif (player_x - element_x) <= 0 and (player_y - element_y) <= 0 then
 		hlQuadrant(4);
 		return 4;
 	end
@@ -363,19 +376,19 @@ function getClosestElements()
 	local extended = getExtendedSprites();
 
 	for i=1, #sprites, 1 do
-		if math.abs(s16(player.x) - sprites[i].x) <= player.reaction.x and math.abs(s16(player.y) - sprites[i].y) <= player.reaction.y then
+		if math.abs(getPlayer().x - sprites[i].x) <= player.reaction.x and math.abs(getPlayer().y - sprites[i].y) <= player.reaction.y then
 			table.insert(cs, sprites[i]);
 		end
 	end
 
 	for i=1, #blocks, 1 do
-		if block.solid[blocks[i].num] ~= nil and math.abs(s16(player.x) - blocks[i].x) <= player.reaction.x and math.abs(s16(player.y) - blocks[i].y) <= player.reaction.y then
+		if block.solid[blocks[i].num] ~= nil and math.abs(getPlayer().x - blocks[i].x) <= player.reaction.x and math.abs(getPlayer().y - blocks[i].y) <= player.reaction.y then
 			table.insert(cs, blocks[i]);
 		end
 	end
 
 	for i=1, #extended, 1 do
-		if math.abs(s16(player.x) - extended[i].x) <= player.reaction.x and math.abs(s16(player.y) - extended[i].y) <= player.reaction.y then
+		if math.abs(getPlayer().x - extended[i].x) <= player.reaction.x and math.abs(getPlayer().y - extended[i].y) <= player.reaction.y then
 			table.insert(cs, extended[i]);
 		end
 	end
@@ -424,16 +437,16 @@ end
 -- player stuck validation
 local stuckCount = 0;
 local stuckDelay = 100;
-local player_last_x = s16(player.x);
+local player_last_x = getPlayer().x;
 
 function frameCount()
 	stuckCount = stuckCount + 1;
 
 	if stuckCount >= stuckDelay then
-		if s16(player.x) <= player_last_x then
+		if getPlayer().x <= player_last_x then
 			playerDeath(generateSituation(getClosestElements()));
 		else
-			player_last_x = s16(player.x);
+			player_last_x = getPlayer().x;
 		end
 
 		stuckCount = 0;
@@ -469,7 +482,7 @@ function playerAction()
 		frameCount();
 	else
 		stuckCount = 0;
-		player_last_x = s16(player.x);
+		player_last_x = getPlayer().x;
 	end
 end
 
