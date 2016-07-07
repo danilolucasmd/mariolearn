@@ -1,7 +1,3 @@
-local u8 = memory.readbyte;
-local s8 =  memory.readbytesigned
-local s16 = memory.readwordsigned;
-
 -- variables
 local player = {
 	x = 0x0094,
@@ -19,8 +15,8 @@ local player = {
 
 function getPlayer()
 	return {
-		x = s16(player.x)+8,
-		y = s16(player.y)+16
+		x = memory.readwordsigned(player.x)+8,
+		y = memory.readwordsigned(player.y)+16
 	};
 end
 
@@ -160,7 +156,7 @@ end
 function console()
 	gui.text(10, 200, "X: " .. getPlayer().x);
 	gui.text(10, 210, "Y: " .. getPlayer().y);
-	gui.text(50, 210, "Speed: " .. u8(player.speed));
+	gui.text(50, 210, "Speed: " .. memory.readbyte(player.speed));
 end
 
 function screenCoordinates(x, y, camera_x, camera_y)
@@ -195,7 +191,7 @@ function drawBlock(screen_x, screen_y, width, height, color)
 end
 
 function drawFieldOfView()
-	local x_screen, y_screen = screenCoordinates(getPlayer().x, getPlayer().y, s16(camera.x), s16(camera.y));
+	local x_screen, y_screen = screenCoordinates(getPlayer().x, getPlayer().y, memory.readwordsigned(camera.x), memory.readwordsigned(camera.y));
 
 	gui.box(x_screen, y_screen, x_screen+player.reaction.x, y_screen-player.reaction.y, 0,"blue");
 	gui.box(x_screen, y_screen, x_screen-player.reaction.x, y_screen-player.reaction.y, 0,"blue");
@@ -205,7 +201,7 @@ end
 
 -- highlight quadrant
 function hlQuadrant(quad)
-	local x_screen, y_screen = screenCoordinates(getPlayer().x, getPlayer().y, s16(camera.x), s16(camera.y));
+	local x_screen, y_screen = screenCoordinates(getPlayer().x, getPlayer().y, memory.readwordsigned(camera.x), memory.readwordsigned(camera.y));
 
 	gui.transparency(2);
 
@@ -224,7 +220,7 @@ end
 
 -- debug by game position
 function debugger(game_x, game_y, text)
-	local screen_x, screen_y = screenCoordinates(game_x, game_y, s16(camera.x), s16(camera.y));
+	local screen_x, screen_y = screenCoordinates(game_x, game_y, memory.readwordsigned(camera.x), memory.readwordsigned(camera.y));
 	drawBlock(screen_x, screen_y, 15, 15, "purple");
 	gui.text(screen_x+3, screen_y+5, text);
 end
@@ -234,16 +230,16 @@ function getSprites()
 
 	for i=0, 12, 1 do
 		local s = {
-			x = 256*u8(sprite.x_high + i) + u8(sprite.x_low + i),
-			y = 256*u8(sprite.y_high + i) + u8(sprite.y_low + i),
-			num = u8(sprite.number + i),
-			st = u8(sprite.status + i)
+			x = 256*memory.readbyte(sprite.x_high + i) + memory.readbyte(sprite.x_low + i),
+			y = 256*memory.readbyte(sprite.y_high + i) + memory.readbyte(sprite.y_low + i),
+			num = memory.readbyte(sprite.number + i),
+			st = memory.readbyte(sprite.status + i)
 		};
 
 		s.x = signed(s.x, 16)+8;
     	s.y = signed(s.y, 16)+8;
 
-    	local screen_x, screen_y = screenCoordinates(s.x, s.y, s16(camera.x), s16(camera.y));
+    	local screen_x, screen_y = screenCoordinates(s.x, s.y, memory.readwordsigned(camera.x), memory.readwordsigned(camera.y));
 
 		if s.st ~= 0 then
 			table.insert(sprites, s);
@@ -259,16 +255,16 @@ function getExtendedSprites()
 
 	for i=0, 11, 1 do
 		local e = {
-			x = 256*u8(extended_sprite.x_high + i) + u8(extended_sprite.x_low + i),
-			y = 256*u8(extended_sprite.y_high + i) + u8(extended_sprite.y_low + i),
-			num = u8(extended_sprite.number + i),
+			x = 256*memory.readbyte(extended_sprite.x_high + i) + memory.readbyte(extended_sprite.x_low + i),
+			y = 256*memory.readbyte(extended_sprite.y_high + i) + memory.readbyte(extended_sprite.y_low + i),
+			num = memory.readbyte(extended_sprite.number + i),
 			st = 0
 		}
 
 		e.x = signed(e.x, 16)+8;
     	e.y = signed(e.y, 16)+8;
 
-    	local screen_x, screen_y = screenCoordinates(e.x, e.y, s16(camera.x), s16(camera.y));
+    	local screen_x, screen_y = screenCoordinates(e.x, e.y, memory.readwordsigned(camera.x), memory.readwordsigned(camera.y));
 
 		if e.num ~= 0 then
 			table.insert(extended, e);
@@ -284,7 +280,7 @@ function getTile(map16_x, map16_y)
 	local game_y = math.floor((getPlayer().y+map16_y)/16);
 	local id = math.floor(game_x/0x10)*0x1B0 + game_y*0x10 + game_x%0x10;
 
-	return (game_x*16)+8, (game_y*16)+8, u8(0x7EC800 + id);
+	return (game_x*16)+8, (game_y*16)+8, memory.readbyte(0x7EC800 + id);
 end
 
 function getBlocks()
@@ -301,12 +297,12 @@ function getBlocks()
 
 			-- Green ground
 			if block.semi[tile] then
-				local screen_x, screen_y = screenCoordinates(game_x, game_y, s16(camera.x), s16(camera.y));
+				local screen_x, screen_y = screenCoordinates(game_x, game_y, memory.readwordsigned(camera.x), memory.readwordsigned(camera.y));
 				drawBlock(screen_x, screen_y, 16, 16, "green");
 			end
 
 			if block.solid[tile] then
-				local screen_x, screen_y = screenCoordinates(game_x, game_y, s16(camera.x), s16(camera.y));
+				local screen_x, screen_y = screenCoordinates(game_x, game_y, memory.readwordsigned(camera.x), memory.readwordsigned(camera.y));
 				drawBlock(screen_x, screen_y, 16, 16, "red");
 
 				local b = {
@@ -473,12 +469,12 @@ function playerAction()
 	end
 
 	-- player die
-	if u8(player.animation_trigger) == 9 then
+	if memory.readbyte(player.animation_trigger) == 9 then
 		playerDeath(situation);
 	end
 
 	-- player stuck
-	if u8(player.speed) <= 7 then
+	if memory.readbyte(player.speed) <= 7 then
 		frameCount();
 	else
 		stuckCount = 0;
