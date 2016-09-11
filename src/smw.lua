@@ -338,10 +338,13 @@ function generateSituation(elements)
 		pos = 0
 	}
 
-	for i=1, #elements, 1 do
-		s.id = s.id .. tostring(elements[i].id)
-		s.st = s.st .. tostring(elements[i].st)
-		s.pos = tonumber(tostring(s.pos) .. tostring(elements[i].y))
+	if #elements ~= 0 then
+		for i=1, #elements, 1 do
+			s.id = s.id .. tostring(elements[i].id)
+			s.st = s.st .. tostring(elements[i].st)
+			s.pos = s.pos + elements[i].y
+		end
+		s.pos = s.pos / #elements
 	end
 
    	return s
@@ -382,11 +385,9 @@ function playerDeath(situation)
 	}
 
 	if reactions[situation.id] == nil then
-		reactions[situation.id] = {
-			[situation.st] = {
-				[situation.pos] = newReact
-			}
-		}
+		reactions[situation.id] = {}
+		reactions[situation.id][situation.st] = {}
+		reactions[situation.id][situation.st][situation.pos] = newReact
 	elseif reactions[situation.id][situation.st] == nil then
 		reactions[situation.id][situation.st] = {
 			[situation.pos] = newReact
