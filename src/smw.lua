@@ -170,17 +170,17 @@ function screenCoordinates(x, y, camera_x, camera_y)
     return x_screen, y_screen
 end
 
-function drawSprite(screen_x, screen_y, color, num, st)
+function drawSprite(screen_x, screen_y, color, id, st)
 	gui.line(screen_x-8, screen_y, screen_x+8, screen_y, color)
 	gui.line(screen_x, screen_y-8, screen_x, screen_y+8, color)
-	gui.text(screen_x-8, screen_y, num)
+	gui.text(screen_x-8, screen_y, id)
 	gui.text(screen_x+8, screen_y, st)
 end
 
-function drawExtendedSprite(screen_x, screen_y, color, num, st)
+function drawExtendedSprite(screen_x, screen_y, color, id, st)
 	gui.line(screen_x-8, screen_y, screen_x+8, screen_y, color)
 	gui.line(screen_x, screen_y-8, screen_x, screen_y+8, color)
-	gui.text(screen_x-8, screen_y, num)
+	gui.text(screen_x-8, screen_y, id)
 	gui.text(screen_x+8, screen_y, st)
 end
 
@@ -197,29 +197,7 @@ end
 function drawFieldOfView()
 	local x_screen, y_screen = screenCoordinates(getPlayer().x, getPlayer().y, memory.readwordsigned(camera.x), memory.readwordsigned(camera.y))
 
-	gui.box(x_screen, y_screen, x_screen+player.reaction.x, y_screen-player.reaction.y, 0,"blue")
-	gui.box(x_screen, y_screen, x_screen-player.reaction.x, y_screen-player.reaction.y, 0,"blue")
-	gui.box(x_screen, y_screen, x_screen-player.reaction.x, y_screen+player.reaction.y, 0,"blue")
-	gui.box(x_screen, y_screen, x_screen+player.reaction.x, y_screen+player.reaction.y, 0,"blue")
-end
-
--- highlight quadrant
-function hlQuadrant(quad)
-	local x_screen, y_screen = screenCoordinates(getPlayer().x, getPlayer().y, memory.readwordsigned(camera.x), memory.readwordsigned(camera.y))
-
-	gui.transparency(2)
-
-	if quad == 1 then
-		gui.box(x_screen, y_screen, x_screen+player.reaction.x, y_screen-player.reaction.y, "blue")
-	elseif quad == 2 then
-		gui.box(x_screen, y_screen, x_screen-player.reaction.x, y_screen-player.reaction.y, "blue")
-	elseif quad == 3 then
-		gui.box(x_screen, y_screen, x_screen-player.reaction.x, y_screen+player.reaction.y, "blue")
-	elseif quad == 4 then
-		gui.box(x_screen, y_screen, x_screen+player.reaction.x, y_screen+player.reaction.y, "blue")
-	end
-
-	gui.transparency(0)
+	gui.box(x_screen-player.reaction.x, y_screen+player.reaction.y, x_screen+player.reaction.x, y_screen-player.reaction.y, 0,"blue")
 end
 
 -- debug by game position
@@ -228,18 +206,6 @@ function debugger(game_x, game_y, text)
 	drawBlock(screen_x, screen_y, 16, 16, "purple")
 	gui.text(screen_x, screen_y, text)
 end
-
--- ['5'] = {
--- 	['8'] = {
--- 		['4'] = {
--- 			action = {Y=false, right=true, A=false, B=true},
--- 			index = 3
--- 		}
--- 	}
--- }
-
--- feature =	{5, 8, 4}
--- label =		{action = {Y=false, right=true, A=false, B=true}, index = 3}
 
 -- parse the table to a pair of features and labels
 function toClassify(table)
@@ -269,7 +235,7 @@ function getSprites()
 		local s = {
 			x = 256*memory.readbyte(sprite.x_high + i) + memory.readbyte(sprite.x_low + i),
 			y = 256*memory.readbyte(sprite.y_high + i) + memory.readbyte(sprite.y_low + i),
-			num = memory.readbyte(sprite.number + i),
+			id = memory.readbyte(sprite.number + i),
 			st = memory.readbyte(sprite.status + i)
 		}
 
@@ -280,7 +246,7 @@ function getSprites()
 
 		if s.st ~= 0 then
 			table.insert(sprites, s)
-			drawSprite(screen_x, screen_y, "red", s.num, s.st)
+			drawSprite(screen_x, screen_y, "red", s.id, s.st)
 		end
 	end
 
@@ -294,7 +260,7 @@ function getExtendedSprites()
 		local e = {
 			x = 256*memory.readbyte(extended_sprite.x_high + i) + memory.readbyte(extended_sprite.x_low + i),
 			y = 256*memory.readbyte(extended_sprite.y_high + i) + memory.readbyte(extended_sprite.y_low + i),
-			num = memory.readbyte(extended_sprite.number + i),
+			id = memory.readbyte(extended_sprite.number + i),
 			st = 0
 		}
 
@@ -303,9 +269,9 @@ function getExtendedSprites()
 
     	local screen_x, screen_y = screenCoordinates(e.x, e.y, memory.readwordsigned(camera.x), memory.readwordsigned(camera.y))
 
-		if e.num ~= 0 then
+		if e.id ~= 0 then
 			table.insert(extended, e)
-			drawExtendedSprite(screen_x, screen_y, "red", e.num, e.st)
+			drawExtendedSprite(screen_x, screen_y, "red", e.id, e.st)
 		end
 	end
 
@@ -346,7 +312,7 @@ function getBlocks()
 					x = game_x,
 					y = game_y,
 					st = 0,
-					num = tile
+					id = tile
 				}
 
 				table.insert(blocks, b)
@@ -359,43 +325,23 @@ end
 
 -- situation model
 ------------------------------
--- situation_number
+-- situation_identification
 	-- situation_state
-		-- situation_quadrant
+		-- situation_position
 			-- action
 			-- index
 ------------------------------
-function getQuadrant(element_x, element_y)
-	-- debugger(element_x, element_y, element_y) -- cool
-
-	local player_x, player_y = getPlayer().x, getPlayer().y
-
-	if (player_x - element_x) <= 0 and (player_y - element_y) > 0 then
-		hlQuadrant(1)
-		return 1
-	elseif (player_x - element_x) > 0 and (player_y - element_y) > 0 then
-		hlQuadrant(2)
-		return 2
-	elseif (player_x - element_x) > 0 and (player_y - element_y) <= 0 then
-		hlQuadrant(3)
-		return 3
-	elseif (player_x - element_x) <= 0 and (player_y - element_y) <= 0 then
-		hlQuadrant(4)
-		return 4
-	end
-end
-
 function generateSituation(elements)
 	local s = {
-		num = "",
+		id = "",
 		st = "",
-		quad = ""
+		pos = 0
 	}
 
 	for i=1, #elements, 1 do
-		s.num = s.num .. tostring(elements[i].num)
+		s.id = s.id .. tostring(elements[i].id)
 		s.st = s.st .. tostring(elements[i].st)
-		s.quad = s.quad .. tostring(getQuadrant(elements[i].x, elements[i].y))
+		s.pos = tonumber(tostring(s.pos) .. tostring(elements[i].y))
 	end
 
    	return s
@@ -415,7 +361,7 @@ function getClosestElements()
 	end
 
 	for i=1, #blocks, 1 do
-		if block.solid[blocks[i].num] ~= nil and math.abs(getPlayer().x - blocks[i].x) <= player.reaction.x and math.abs(getPlayer().y - blocks[i].y) <= player.reaction.y then
+		if block.solid[blocks[i].id] ~= nil and math.abs(getPlayer().x - blocks[i].x) <= player.reaction.x and math.abs(getPlayer().y - blocks[i].y) <= player.reaction.y then
 			table.insert(cs, blocks[i])
 		end
 	end
@@ -435,25 +381,25 @@ function playerDeath(situation)
 		index = 1
 	}
 
-	if reactions[situation.num] == nil then
-		reactions[situation.num] = {
+	if reactions[situation.id] == nil then
+		reactions[situation.id] = {
 			[situation.st] = {
-				[situation.quad] = newReact
+				[situation.pos] = newReact
 			}
 		}
-	elseif reactions[situation.num][situation.st] == nil then
-		reactions[situation.num][situation.st] = {
-			[situation.quad] = newReact
+	elseif reactions[situation.id][situation.st] == nil then
+		reactions[situation.id][situation.st] = {
+			[situation.pos] = newReact
 		}
-	elseif reactions[situation.num][situation.st][situation.quad] == nil then
-		reactions[situation.num][situation.st][situation.quad] = newReact
+	elseif reactions[situation.id][situation.st][situation.pos] == nil then
+		reactions[situation.id][situation.st][situation.pos] = newReact
 	else
-		local index = reactions[situation.num][situation.st][situation.quad].index
+		local index = reactions[situation.id][situation.st][situation.pos].index
 
 		if index < #variations then
 			index = index + 1
-			reactions[situation.num][situation.st][situation.quad].action = variations[index].action
-			reactions[situation.num][situation.st][situation.quad].index = index
+			reactions[situation.id][situation.st][situation.pos].action = variations[index].action
+			reactions[situation.id][situation.st][situation.pos].index = index
 		else
 			print("you shall not pass!")
 		end
@@ -461,7 +407,7 @@ function playerDeath(situation)
 
 	updateTree(reactions)
 
-	print(situation, reactions[situation.num][situation.st][situation.quad].action)
+	print(situation, reactions[situation.id][situation.st][situation.pos].action)
 
 	-- save new values in the base
 	saveFile(getFilePath("db.lua"), reactions)
@@ -493,7 +439,7 @@ function playerAction()
 	-- reaction exec
 	local situation = generateSituation(getClosestElements())
 
-	local observation = {tostring(situation.num), tostring(situation.st), situation.quad}
+	local observation = {situation.id, situation.st, situation.pos}
 	local react = decision_tree.run(observation)
 	for k, v in pairs(react) do
 		react = k
@@ -520,7 +466,7 @@ end
 local data_base_file = loadFile("db.lua")
 -- reactions = loadstring("return ".. data_base_file)()
 -- MOCK
-reactions = {['']={['']={['']={action={Y=false, right=true, A=false, B=false}, index=1}}}}
+reactions = {['']={['']={[0]={action={Y=false, right=true, A=false, B=false}, index=1}}}}
 updateTree(reactions)
 generateVariations({}, 1)
 
