@@ -1,7 +1,5 @@
--- imports
 local learning = require "ml"
 
--- variables
 local player = {
 	x = 0x0094,
 	y = 0x0096,
@@ -76,12 +74,10 @@ local variations = {}
 local reactions = {}
 local decision_tree = {}
 
--- functions
--- function to turn a reference variable in a new variable.
 function new(var)
 	local new_var = {}
 	for k, v in pairs(var) do
-		new_var[k] = v -- or new_var[k] = var[k]
+		new_var[k] = v
 	end
 
 	return new_var
@@ -103,7 +99,6 @@ function generateVariations(action, index)
 	end
 end
 
--- file IO functions
 function saveFile(filename, obj)
 	local file = io.open(filename, "w")
 	file:write(tostring(obj))
@@ -200,14 +195,12 @@ function drawFieldOfView()
 	gui.box(x_screen-player.reaction.x, y_screen+player.reaction.y, x_screen+player.reaction.x, y_screen-player.reaction.y, 0,"blue")
 end
 
--- debug by game position
 function debugger(game_x, game_y, text)
 	local screen_x, screen_y = screenCoordinates(game_x, game_y, memory.readwordsigned(camera.x), memory.readwordsigned(camera.y))
 	drawBlock(screen_x, screen_y, 16, 16, "purple")
 	gui.text(screen_x, screen_y, text)
 end
 
--- parse the table to a pair of features and labels
 function toClassify(table)
 	local features = {}
 	local labels = {}
@@ -289,7 +282,6 @@ end
 function getBlocks()
 	local blocks = {}
 
-	-- size = 6*16
 	local size = 160
 
 	for m16_y=-size, size, 16 do
@@ -298,7 +290,6 @@ function getBlocks()
 
 			-- debugger(game_x, game_y, tile)
 
-			-- Green ground
 			if block.semi[tile] then
 				local screen_x, screen_y = screenCoordinates(game_x, game_y, memory.readwordsigned(camera.x), memory.readwordsigned(camera.y))
 				drawBlock(screen_x, screen_y, 16, 16, "green")
@@ -323,14 +314,6 @@ function getBlocks()
 	return blocks
 end
 
--- situation model
-------------------------------
--- situation_identification
-	-- situation_state
-		-- situation_position
-			-- action
-			-- index
-------------------------------
 function generateSituation(elements)
 	local s = {
 		id = "",
@@ -410,13 +393,11 @@ function playerDeath(situation)
 
 	print(situation, reactions[situation.id][situation.st][situation.pos].action)
 
-	-- save new values in the base
 	saveFile(getFilePath("db.lua"), reactions)
 
 	reload(1)
 end
 
--- player stuck validation
 local stuckCount = 0
 local stuckDelay = 100
 local player_last_x = getPlayer().x
@@ -435,9 +416,7 @@ function frameCount()
 	end
 end
 
--- such a main function.
 function playerAction()
-	-- reaction exec
 	local situation = generateSituation(getClosestElements())
 
 	local observation = {situation.id, situation.st, situation.pos}
@@ -448,12 +427,10 @@ function playerAction()
 	-- print(observation, react.action)
 	joypad.set(react.action)
 
-	-- player die
 	if memory.readbyte(player.animation_trigger) == 9 then
 		playerDeath(situation)
 	end
 
-	-- player stuck
 	if memory.readbyte(player.speed) <= 7 then
 		frameCount()
 	else
@@ -462,8 +439,7 @@ function playerAction()
 	end
 end
 
--- start
--- loading reactions from file.
+
 local data_base_file = loadFile("db.lua")
 -- reactions = loadstring("return ".. data_base_file)()
 -- MOCK
@@ -471,11 +447,11 @@ reactions = {['']={['']={[0]={action={Y=false, right=true, A=false, B=false}, in
 updateTree(reactions)
 generateVariations({}, 1)
 
--- update
+-- Update
 while true do
 	playerAction()
 	console()
 	drawFieldOfView()
 
-	emu.frameadvance()-- important
+	emu.frameadvance()
 end
