@@ -9,7 +9,7 @@ local player = {
 	on_ground = 0x13ef,
 	reaction = {
 		x = 32,
-		y = 32,
+		y = 15,
 	},
 	blocked_status = 0x0077,
 }
@@ -48,11 +48,6 @@ function Set (list)
 	return set
 end
 
-local block = {
-	semi = Set {0, 1, 3, 4},
-	solid = Set {51, 52, 53, 54}
-}
-
 local camera = {
 	x = 0x001a,
 	y = 0x001c,
@@ -73,6 +68,7 @@ local commands = {
 local variations = {}
 local reactions = {}
 local decision_tree = {}
+local resets = 0
 
 function new(var)
 	local new_var = {}
@@ -83,6 +79,7 @@ function new(var)
 	return new_var
 end
 
+local variationIndex = 0;
 function generateVariations(action, index)
 	local command = commands[index]
 	for i=1, #command.states, 1 do
@@ -90,12 +87,37 @@ function generateVariations(action, index)
 		if index < #commands then
 			generateVariations(action, index+1)
 		else
+			variationIndex = variationIndex + 1
 			local variation = {
 				action = new(action),
-				weight = 1,
+				weight = 1000,
+				index = variationIndex
 			}
 			table.insert(variations, variation)
 		end
+	end
+end
+
+function optimizeVariation(variationIndex)
+	local i=1
+	while i < #variations do
+		if variations[i].index == variationIndex then
+			variations[i].weight = variations[i].weight - 1
+			break
+		end
+		i = i + 1
+	end
+
+	local aux
+	if variations[i+1] ~= nil and variations[i+1].weight > variations[i].weight then
+		aux = variations[i]
+		variations[i] = variations[i+1]
+		variations[i+1] = aux
+	else if variations[i-1] ~= nil and variations[i-1].weight < variations[i].weight then
+		aux = variations[i]
+		variations[i] = variations[i-1]
+		variations[i-1] = aux
+	end
 	end
 end
 
@@ -139,6 +161,7 @@ end
 
 function reload(save_num)
 	local save_state = savestate.create(save_num)
+	resets = resets + 1
 	savestate.load(save_state)
 end
 
@@ -156,6 +179,7 @@ function console()
 	gui.text(10, 200, "X: " .. getPlayer().x)
 	gui.text(10, 210, "Y: " .. getPlayer().y)
 	gui.text(50, 210, "Speed: " .. memory.readbyte(player.speed))
+	gui.text(100, 210, "Resets: " .. tostring(resets))
 end
 
 function screenCoordinates(x, y, camera_x, camera_y)
@@ -276,7 +300,7 @@ function getTile(map16_x, map16_y)
 	local game_y = math.floor((getPlayer().y+map16_y)/16)
 	local id = math.floor(game_x/0x10)*0x1B0 + game_y*0x10 + game_x%0x10
 
-	return (game_x*16)+8, (game_y*16)+8, memory.readbyte(0x7EC800 + id)
+	return (game_x*16)+8, (game_y*16)+8, memory.readbyte(0x7FC800 + id)
 end
 
 function getBlocks()
@@ -290,14 +314,8 @@ function getBlocks()
 
 			-- debugger(game_x, game_y, tile)
 
-			if block.semi[tile] then
+			if tile == 1 then
 				local screen_x, screen_y = screenCoordinates(game_x, game_y, memory.readwordsigned(camera.x), memory.readwordsigned(camera.y))
-				drawBlock(screen_x, screen_y, 16, 16, "green")
-			end
-
-			if block.solid[tile] then
-				local screen_x, screen_y = screenCoordinates(game_x, game_y, memory.readwordsigned(camera.x), memory.readwordsigned(camera.y))
-				drawBlock(screen_x, screen_y, 16, 16, "red")
 
 				local b = {
 					x = game_x,
@@ -305,6 +323,8 @@ function getBlocks()
 					st = 0,
 					id = tile
 				}
+
+				drawBlock(screen_x, screen_y, 16, 16, "green")
 
 				table.insert(blocks, b)
 			end
@@ -347,7 +367,7 @@ function getClosestElements()
 	end
 
 	for i=1, #blocks, 1 do
-		if block.solid[blocks[i].id] ~= nil and math.abs(getPlayer().x - blocks[i].x) <= player.reaction.x and math.abs(getPlayer().y - blocks[i].y) <= player.reaction.y then
+		if math.abs(getPlayer().x - blocks[i].x) <= player.reaction.x and math.abs(getPlayer().y - blocks[i].y) <= player.reaction.y then
 			table.insert(cs, blocks[i])
 		end
 	end
@@ -361,10 +381,13 @@ function getClosestElements()
 	return cs
 end
 
-function playerDeath(situation)
+function playerDeath(situation, reactionIndex)
+	optimizeVariation(reactionIndex)
+
 	local newReact = {
 		action = variations[1].action,
-		index = 1
+		index = 1,
+		variations = variations
 	}
 
 	if reactions[situation.id] == nil then
@@ -378,12 +401,12 @@ function playerDeath(situation)
 	elseif reactions[situation.id][situation.st][situation.pos] == nil then
 		reactions[situation.id][situation.st][situation.pos] = newReact
 	else
-		local index = reactions[situation.id][situation.st][situation.pos].index
+		local react = reactions[situation.id][situation.st][situation.pos]
 
-		if index < #variations then
-			index = index + 1
-			reactions[situation.id][situation.st][situation.pos].action = variations[index].action
-			reactions[situation.id][situation.st][situation.pos].index = index
+		if react ~= nil and react.index < #react.variations then
+			react.index = react.index + 1
+			react.action = react.variations[react.index].action
+			reactions[situation.id][situation.st][situation.pos] = react
 		else
 			print("you shall not pass!")
 		end
@@ -428,7 +451,7 @@ function playerAction()
 	joypad.set(react.action)
 
 	if memory.readbyte(player.animation_trigger) == 9 then
-		playerDeath(situation)
+		playerDeath(situation, react.index)
 	end
 
 	if memory.readbyte(player.speed) <= 7 then
