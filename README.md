@@ -1,4 +1,4 @@
-# Mario IA #
+# MarioLearn #
 
 Algoritmo de Inteligência Artificial para "resolver / passar" fases de jogos de plataforma, como Super Mario World.
 
@@ -47,4 +47,4 @@ Algoritmo de Inteligência Artificial para "resolver / passar" fases de jogos de
 * http://www.fceux.com/web/help/fceux.html?LuaFunctionsList.html
 
 #### Imagens ####
-![alt tag](http://www.webquest.hawaii.edu/kahihi/mathdictionary/images/quadrant.png)
+
