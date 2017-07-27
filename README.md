@@ -24,16 +24,15 @@ Este algoritmo foi desenvolvido como TCC (Trabalho de Conclusão de Curso) do cu
     
 ### Como configurar? ###
 
-* Baixe o [zip]() do repositório e o [emulador]().
+* Baixe o [zip](https://github.com/daniloluca/mariolearn/master.zip) do repositório. O zip contendo o emulador encontra-se dentro do zip do repositório.
 * Descompacte ambos e execute o arquivo __snes9x.exe__ presente no diretorio do emulador.
 * Selecione a rom no emulador que está presente no diretório do mesmo. Você pode arrastar e soltar a rom na janela do emulador.
 * Com o jogo rodando, adicione arquivo __smw.lua__ ao plugin, ele se encontra em __\your_path\mariolearn\src__. Também pode ser arrastado para dentro do emulador e uma janela referente ao __TAS__ irá surgir.
  
 ### Como utilizar? ###
 
-* Existem __3__ states pré-configurados.
-* Você pode utilizar as teclas __F1__, __F2__ e __F3__ para navegar entre as fases salvas.
-
+* Se o jogo estiver rodando na tela de apresentação e algumas retangulos azuis, verdes ou vermelhos estiverem aparecendo na tela do emulador, é só precionar a tecla __F1__ e o algoritmo será iniciado na primeira fase do jogo.
+* Se preferir, a tecla + pode ser acionada diversas vezes para acelerar a emulação e consequentemente o treinamento do algoritmo. Ele pode ser acelerado até 400%.
 
 ### Links Uteis ###
 
