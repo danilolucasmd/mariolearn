@@ -1,42 +1,42 @@
 # MarioLearn #
 
-Algoritmo de aprendizado por reforço capaz de aprender a passar fases de jogos de plataforma, como Super Mario World.
-Este algoritmo foi desenvolvido como TCC (Trabalho de Conclusão de Curso) do curso de Ciência da Computação da Universidade de Sorocaba, de titulo __"Aprendizado de Máquina Aplicado à Resolução de Problemas de Decisão"__ e sua documentação pode ser encontrada [aqui](https://github.com/daniloluca/tcc-doc/blob/master/release/TCC%20-%20Danilo%20de%20Lucas.pdf).
+Reinforcement learning algorithm capable of learning to pass levels in platform games like Super Mario World.
+This algorithm was developed as a TCC (Course Completion Work) of the Computer Science course at the University of Sorocaba, entitled __"Machine Learning Applied to Decision Problem Solving"__ and its documentation can be found [here]( https://github.com/daniloluca/tcc-doc/blob/master/release/TCC%20-%20Danilo%20de%20Lucas.pdf).
 
-### Para que serve? ###
+### What is it for? ###
 
-* O algoritmo tem a finalidade de aprender a jogar jogos de plataforma 2d, sem nenhum conhecimento prévio do ambiente ou das condições apresentadas ao personagem.
+* The algorithm is intended to learn how to play 2d platform games, without any prior knowledge of the environment or the conditions presented to the character.
 
-### O que é utilizado nele? ###
+### What is used in it? ###
 
-#### Conceitualmente ####
-* Nele são utilizados conceitos de classificação, tais como entropia e ganho de informação para a geração de árvores de decisão.
-* Ele utiliza uma biblioteca de machine learning chamada [ml-lua](https://github.com/daniloluca/ml-lua) para gerar as árvores de decisão. Trata-se de uma bibliote de autoria própria utilizada para o auxilio no desenvolvimento de algoritmos de classificação.
-* São utilizadas heurísticas para a inferencia de dados de natureza não determinística e conceitos como backtracking para a iteração recursiva das soluções.
-* Ao final, é meta programada uma rede neural capaz de aprender com soluções bem sucedidas e modificar ou generalizar seus resultados para solucionar situações nunca antes encontradas.
+#### Conceptually ####
+* It uses classification concepts such as entropy and information gain to generate decision trees.
+* It uses a machine learning library called [ml-lua](https://github.com/daniloluca/ml-lua) to generate the decision trees. It is a self-authored library used to aid in the development of classification algorithms.
+* Heuristics are used for the inference of non-deterministic data and concepts such as backtracking for the recursive iteration of solutions.
+* In the end, a neural network capable of learning from successful solutions and modifying or generalizing their results to solve situations never encountered before is programmed as a goal.
 
-#### Tecnicamente ####
-* Foi utilizada a linguagem de programação Lua para desenvolver o script.
-* O script é rodado por meio do __TAS__ (plugin para emuladores de SNES que da suporte a scripting em lua).
-* O emulador utilizado foi o __Snes9x__.
-* A rom utilizada foi a __Super Mario World (USA)__.
-* A biblioteca de Machine Learning utilizada foi a [ml-lua](https://github.com/daniloluca/ml-lua).
+#### Technically ####
+* Lua programming language was used to develop the script.
+* The script is run through __TAS__ (plugin for SNES emulators that support scripting in lua).
+* The emulator used was __Snes9x__.
+* The rom used was __Super Mario World (USA)__.
+* The Machine Learning library used was [ml-lua](https://github.com/daniloluca/ml-lua).
     
-### Como configurar? ###
+### How to configure? ###
 
-* Baixe o [zip](https://github.com/daniloluca/mariolearn/master.zip) do repositório. O zip contendo o emulador encontra-se dentro do zip do repositório.
-* Descompacte ambos e execute o arquivo __snes9x.exe__ presente no diretorio do emulador.
-* Selecione a rom no emulador que está presente no diretório do mesmo. Você pode arrastar e soltar a rom na janela do emulador.
-* Com o jogo rodando, adicione arquivo __smw.lua__ ao plugin, ele se encontra em __\your_path\mariolearn\src__. Também pode ser arrastado para dentro do emulador e uma janela referente ao __TAS__ irá surgir.
+* Download the [zip](https://github.com/daniloluca/mariolearn/master.zip) from the repository. The zip containing the emulator is inside the repository zip.
+* Unzip both and run the file __snes9x.exe__ present in the emulator directory.
+* Select the rom in the emulator that is present in the emulator directory. You can drag and drop the rom into the emulator window.
+* With the game running, add the __smw.lua__ file to the plugin, it is located in __\your_path\mariolearn\src__. It can also be dragged into the emulator and a window referring to __TAS__ will appear.
  
-### Como utilizar? ###
+### How to use? ###
 
-* Se o jogo estiver rodando na tela de apresentação e algumas retangulos azuis, verdes ou vermelhos estiverem aparecendo na tela do emulador, é só precionar a tecla __F1__ e o algoritmo será iniciado na primeira fase do jogo.
-* Se preferir, a tecla + pode ser acionada diversas vezes para acelerar a emulação e consequentemente o treinamento do algoritmo. Ele pode ser acelerado até 400%.
+* If the game is running on the splash screen and some blue, green or red rectangles are appearing on the emulator screen, just press the __F1__ key and the algorithm will be started in the first phase of the game.
+* If you prefer, the + key can be pressed several times to speed up the emulation and consequently the training of the algorithm. It can be accelerated up to 400%.
 
-### Links Uteis ###
+### Useful links ###
 
-#### Artigos e Referências ####
+#### Articles and References ####
 * https://goo.gl/4EGygO
 * http://goo.gl/Cj8khW
 * https://goo.gl/MLC3DW
@@ -56,7 +56,7 @@ Este algoritmo foi desenvolvido como TCC (Trabalho de Conclusão de Curso) do cu
 * http://goo.gl/O9n6f6
 * https://goo.gl/Pt188G
 
-#### Ferramentas ####
+#### Tools ####
 ##### Ram Map Super Mario World #####
 * http://www.smwcentral.net/?p=map&type=ram
 * http://www.smwcentral.net/?p=nmap&m=smwram
@@ -64,5 +64,5 @@ Este algoritmo foi desenvolvido como TCC (Trabalho de Conclusão de Curso) do cu
 ##### Lua TAS Scripting #####
 * http://www.fceux.com/web/help/fceux.html?LuaFunctionsList.html
 
-#### Imagens ####
+#### Images ####
 
